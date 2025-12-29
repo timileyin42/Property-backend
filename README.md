@@ -308,45 +308,7 @@ http://localhost:8000
 ### Example Requests
 
 #### Signup
-```bash
-curl -X POST http://localhost:8000/api/auth/signup \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "user@example.com",
-    "password": "SecurePass123!",
-    "full_name": "John Doe",
-    "phone": "+234-800-000-0000"
-  }'
-```
 
-#### Login
-```bash
-# OAuth2 password flow - use form data with 'username' and 'password'
-curl -X POST http://localhost:8000/api/auth/login \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=admin@plugoflagosproperty.com&password=Admin123!"
-```
-
-#### Get Properties
-```bash
-curl http://localhost:8000/api/properties
-```
-
-#### Create Property (Admin)
-```bash
-curl -X POST http://localhost:8000/api/admin/properties \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Luxury Apartment",
-    "location": "Lekki, Lagos",
-    "description": "Beautiful 3-bedroom apartment",
-    "status": "AVAILABLE",
-    "image_urls": []
-  }'
-```
-
----
 
 ## 🗄️ Database Schema
 
@@ -448,26 +410,6 @@ This allows seamless integration with:
 - OAuth2 client libraries
 - Standard authentication flows
 
-### Default Test Credentials
-
-After running `seed_data.py`:
-
-```
-Admin:
-  Email: admin@plugoflagosproperty.com
-  Password: Admin123!
-
-Regular User:
-  Email: john.doe@example.com
-  Password: Password123!
-
-Investor:
-  Email: jane.smith@example.com
-  Password: Password123!
-```
-
----
-
 ## 🚢 Deployment
 
 ### Docker Deployment
@@ -487,22 +429,8 @@ Investor:
    docker-compose exec app alembic upgrade head
    ```
 
-4. **Seed production data**
-   ```bash
-   docker-compose exec app python seed_data.py
-   ```
-
 ### Environment Variables for Production
 
-```env
-DATABASE_URL=postgresql://user:password@db-host:5432/propertydb
-SECRET_KEY=<generate-strong-secret-key>
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-REFRESH_TOKEN_EXPIRE_DAYS=7
-DEBUG=False
-CORS_ORIGINS=https://yourdomain.com
-```
 
 ### Database Migrations
 
@@ -519,8 +447,6 @@ alembic downgrade -1
 # View migration history
 alembic history
 ```
-
----
 
 ## 📁 Project Structure
 
@@ -579,12 +505,3 @@ Property-backend/
 
 This project is proprietary and confidential.
 
----
-
-## 📞 Support
-
-For questions or issues, contact the development team.
-
----
-
-**Built with ❤️ using FastAPI**
