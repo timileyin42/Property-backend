@@ -1,0 +1,34 @@
+from pydantic import BaseModel, Field
+from typing import Optional
+from datetime import datetime
+
+
+class UpdateCreate(BaseModel):
+    """Schema for creating a property update/news"""
+    property_id: Optional[int] = None
+    title: str = Field(..., min_length=3)
+    content: str = Field(..., min_length=10)
+
+
+class UpdateResponse(BaseModel):
+    """Response schema for update data"""
+    id: int
+    property_id: Optional[int]
+    title: str
+    content: str
+    created_at: datetime
+    updated_at: datetime
+    
+    # Optional property info
+    property_title: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
+
+class UpdateListResponse(BaseModel):
+    """Response schema for paginated update list"""
+    updates: list[UpdateResponse]
+    total: int
+    page: int
+    page_size: int

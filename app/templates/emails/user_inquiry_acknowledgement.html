@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You for Your Inquiry</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 10px 10px 0 0;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .content {
+            background: #f9fafb;
+            padding: 40px 30px;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .greeting {
+            font-size: 18px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .highlight-box {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 25px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .icon {
+            font-size: 48px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .social-links {
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>✅ Thank You!</h1>
+        <p style="margin: 10px 0 0 0;">We've received your inquiry</p>
+    </div>
+
+    <div class="content">
+        <p class="greeting">Hello {{name}},</p>
+
+        <p>Thank you for your interest in {{property_title}}!</p>
+
+        <div class="highlight-box">
+            <div class="icon">📧</div>
+            <p style="text-align: center; margin: 0;">
+                <strong>Your inquiry has been successfully submitted.</strong><br>
+                A member of our team will review your message and contact you shortly.
+            </p>
+        </div>
+
+        <p><strong>What happens next?</strong></p>
+        <ul>
+            <li>Our team will review your inquiry within 24 hours</li>
+            <li>We'll reach out via email or phone to discuss your requirements</li>
+            <li>We'll provide detailed information about the property and investment opportunities</li>
+        </ul>
+
+        <p>In the meantime, feel free to explore more properties on our website or contact us directly if you have any
+            urgent questions.</p>
+
+        <p style="margin-top: 30px;">
+            <strong>Best regards,</strong><br>
+            The POL Properties Team
+        </p>
+    </div>
+
+    <div class="footer">
+        <p><strong>POL Properties</strong></p>
+        <p>Property Investment Platform</p>
+        <div class="social-links">
+            <a href="mailto:sales@polproperties.com">Email Us</a> |
+            <a href="tel:+234-800-000-0000">Call Us</a>
+        </div>
+        <p style="margin-top: 20px; font-size: 12px;">
+            This email was sent because you submitted an inquiry on our website.<br>
+            If you did not make this request, please ignore this email.
+        </p>
+    </div>
+</body>
+
+</html>

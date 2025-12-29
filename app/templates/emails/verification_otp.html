@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 10px 10px 0 0;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .content {
+            background: #f9fafb;
+            padding: 40px 30px;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .greeting {
+            font-size: 18px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .otp-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 30px 0;
+            text-align: center;
+            border: 2px solid #667eea;
+        }
+
+        .otp-code {
+            font-size: 48px;
+            font-weight: bold;
+            letter-spacing: 10px;
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+        }
+
+        .expiry-notice {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .security-notice {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🔐 Verify Your Email</h1>
+        <p style="margin: 10px 0 0 0;">Welcome to POL Properties!</p>
+    </div>
+
+    <div class="content">
+        <p class="greeting">Hello {{name}},</p>
+
+        <p>Thank you for signing up! To complete your registration and secure your account, please verify your email
+            address.</p>
+
+        <div class="otp-box">
+            <p style="margin: 0; color: #6b7280; font-size: 14px;">Your verification code is:</p>
+            <div class="otp-code">{{otp_code}}</div>
+            <p style="margin: 0; color: #6b7280; font-size: 14px;">Enter this code to verify your email</p>
+        </div>
+
+        <div class="expiry-notice">
+            <strong>⏰ Important:</strong> This code will expire in <strong>15 minutes</strong>. Please verify your email
+            as soon as possible.
+        </div>
+
+        <p><strong>What happens next?</strong></p>
+        <ul>
+            <li>Enter the code on the verification page</li>
+            <li>Your email will be verified</li>
+            <li>You can then log in to your account</li>
+            <li>Wait for admin approval to become an investor</li>
+        </ul>
+
+        <div class="security-notice">
+            <strong>🛡️ Security Notice:</strong> If you didn't sign up for POL Properties, please ignore this email.
+            Your email address will not be used without verification.
+        </div>
+
+        <p style="margin-top: 30px;">
+            <strong>Best regards,</strong><br>
+            The POL Properties Team
+        </p>
+    </div>
+
+    <div class="footer">
+        <p><strong>POL Properties</strong></p>
+        <p>Property Investment Platform</p>
+        <p style="margin-top: 20px; font-size: 12px;">
+            This is an automated email. Please do not reply.<br>
+            If you need help, contact us at sales@polproperties.com
+        </p>
+    </div>
+</body>
+
+</html>
