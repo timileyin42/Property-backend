@@ -37,3 +37,15 @@ class UserResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Request schema for forgot password"""
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    """Request schema for password reset"""
+    email: EmailStr
+    reset_code: str = Field(..., min_length=6, max_length=6)
+    new_password: str = Field(..., min_length=8)

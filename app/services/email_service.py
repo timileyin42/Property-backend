@@ -177,3 +177,42 @@ def generate_otp() -> str:
     """
     import random
     return ''.join([str(random.randint(0, 9)) for _ in range(6)])
+
+
+def send_password_reset(
+    email: str,
+    name: str,
+    reset_code: str
+) -> bool:
+    """
+    Send password reset email with reset code
+    
+    Args:
+        email: User's email
+        name: User's name
+        reset_code: 6-digit reset code
+    
+    Returns:
+        True if sent successfully, False otherwise
+    """
+    try:
+        html_content = load_email_template(
+            "password_reset",
+            name=name,
+            reset_code=reset_code
+        )
+        
+        params = {
+            "from": settings.FROM_EMAIL,
+            "to": [email],
+            "subject": "Reset Your Password - POL Properties",
+            "html": html_content,
+        }
+        
+        response = resend.Emails.send(params)
+        logger.info(f"Password reset email sent to {email}: {response}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send password reset email: {e}")
+        return False

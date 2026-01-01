@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum, DateTime
+from sqlalchemy import Column, Integer, String, Enum, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -29,6 +29,10 @@ class User(Base):
     is_verified = Column(Boolean, default=False, nullable=False)
     verification_token = Column(String, nullable=True)  # OTP code
     verification_token_expires = Column(DateTime(timezone=True), nullable=True)
+    
+    # Password reset
+    password_reset_token = Column(String, nullable=True)  # Reset code
+    password_reset_token_expires = Column(DateTime(timezone=True), nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

@@ -24,11 +24,11 @@ def create_admin_user():
         admin = db.query(User).filter(User.email == settings.ADMIN_EMAIL).first()
         
         if admin:
-            logger.info(f"✅ Admin user already exists: {settings.ADMIN_EMAIL}")
+            logger.info(f" Admin user already exists: {settings.ADMIN_EMAIL}")
             return
         
         # Create admin user
-        logger.info(f"🔧 Creating admin user: {settings.ADMIN_EMAIL}")
+        logger.info(f" Creating admin user: {settings.ADMIN_EMAIL}")
         admin = User(
             email=settings.ADMIN_EMAIL,
             password_hash=hash_password(settings.ADMIN_PASSWORD),
@@ -42,10 +42,10 @@ def create_admin_user():
         db.commit()
         db.refresh(admin)
         
-        logger.info(f"✅ Admin user created successfully: {settings.ADMIN_EMAIL}")
+        logger.info(f" Admin user created successfully: {settings.ADMIN_EMAIL}")
         
     except Exception as e:
-        logger.error(f"❌ Error creating admin user: {e}")
+        logger.error(f" Error creating admin user: {e}")
         db.rollback()
     finally:
         db.close()
@@ -55,6 +55,6 @@ def startup_tasks():
     """
     Run all startup tasks
     """
-    logger.info("🚀 Running startup tasks...")
+    logger.info(" Running startup tasks...")
     create_admin_user()
     logger.info("✨ Startup tasks completed")
