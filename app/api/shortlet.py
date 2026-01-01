@@ -31,7 +31,6 @@ from app.services.distribution_service import calculate_and_create_distributions
 router = APIRouter(prefix="/api/admin/shortlet", tags=["Admin - Shortlet Management"], dependencies=[Depends(require_admin)])
 
 
-# ==================== OCCUPANCY ENDPOINTS ====================
 
 @router.post("/occupancy", response_model=OccupancyResponse, status_code=status.HTTP_201_CREATED)
 def create_occupancy_record(
@@ -138,7 +137,6 @@ def update_occupancy_record(
     return occupancy
 
 
-# ==================== REVENUE ENDPOINTS ====================
 
 @router.post("/revenue", response_model=RevenueResponse, status_code=status.HTTP_201_CREATED)
 def create_revenue_record(
@@ -278,7 +276,6 @@ def distribute_revenue(
         )
 
 
-# ==================== DISTRIBUTION ENDPOINTS ====================
 
 @router.get("/distributions", response_model=DistributionListResponse)
 def get_all_distributions(
