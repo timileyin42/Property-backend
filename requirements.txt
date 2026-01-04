@@ -29,3 +29,7 @@ cloudinary==1.36.0
 
 # Email
 resend==0.8.0
+
+# Caching & Session Management
+redis==5.0.1
+hiredis==2.3.2

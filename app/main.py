@@ -60,9 +60,32 @@ def root():
 
 @app.get("/health")
 def health_check():
-    """Health check endpoint"""
+    """Health check endpoint with database and Redis status"""
+    from app.utils.redis_client import health_check as redis_health
+    from app.core.database import get_db
+    
+    # Check database
+    db_status = {"status": "healthy", "connected": True}
+    try:
+        db = next(get_db())
+        db.execute("SELECT 1")
+        db.close()
+    except Exception as e:
+        db_status = {"status": "unhealthy", "connected": False, "error": str(e)}
+    
+    # Check Redis
+    redis_status = redis_health()
+    
+    # Overall status
+    overall_healthy = (
+        db_status.get("status") == "healthy" and 
+        redis_status.get("status") == "healthy"
+    )
+    
     return {
-        "status": "healthy",
+        "status": "healthy" if overall_healthy else "degraded",
         "service": settings.APP_NAME,
-        "version": settings.APP_VERSION
+        "version": settings.APP_VERSION,
+        "database": db_status,
+        "redis": redis_status
     }

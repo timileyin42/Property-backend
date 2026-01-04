@@ -55,6 +55,19 @@ def startup_tasks():
     """
     Run all startup tasks
     """
-    logger.info(" Running startup tasks...")
+    logger.info("🚀 Running startup tasks...")
+    
+    # Initialize database
     create_admin_user()
+    
+    # Initialize Redis connection
+    try:
+        from app.utils.redis_client import get_redis
+        redis_client = get_redis()
+        redis_client.ping()
+        logger.info("✅ Redis connection established")
+    except Exception as e:
+        logger.warning(f"⚠️  Redis connection failed: {e}")
+        logger.warning("   Application will continue without Redis caching")
+    
     logger.info("✨ Startup tasks completed")

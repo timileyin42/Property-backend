@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str
     
+    # Redis
+    REDIS_URL: str
+    REDIS_MAX_CONNECTIONS: int = 10
+    REDIS_CACHE_TTL: int = 300  # 5 minutes default cache TTL
+    
     # JWT
     SECRET_KEY: str
     ALGORITHM: str = "HS256"

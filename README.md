@@ -158,12 +158,15 @@ sequenceDiagram
 
 - **Framework**: FastAPI 0.109.0
 - **Database**: PostgreSQL 15
+- **Cache/Session**: Redis 7
 - **ORM**: SQLAlchemy 2.0
 - **Migrations**: Alembic 1.13
 - **Authentication**: JWT (python-jose)
 - **Password Hashing**: bcrypt (passlib)
 - **Validation**: Pydantic 2.5
-- **Containerization**: Docker & Docker Compose
+- **Email**: Resend
+- **Media Storage**: Cloudinary
+- **Containerization**: Docker & Docker Compose (multi-stage builds)
 
 ---
 
@@ -183,7 +186,12 @@ The application automatically creates an admin user on startup using credentials
 2. **Idempotent** - If the admin already exists, it skips creation
 3. **Configurable** - Set admin credentials in `.env` file
 
-### Quick Start with Docker
+### Quick Start with Docker (Recommended)
+
+The application uses Docker Compose to orchestrate three services:
+- **PostgreSQL** - Primary database
+- **Redis** - Caching and session management
+- **FastAPI App** - Main application server
 
 1. **Clone the repository**
    ```bash
@@ -196,33 +204,83 @@ The application automatically creates an admin user on startup using credentials
    cp .env.example .env
    ```
    
-   Edit `.env` and update the `SECRET_KEY`:
+   Edit `.env` and configure required variables:
    ```env
-   SECRET_KEY=your-super-secret-key-min-32-characters-long
+   SECRET_KEY=
+   DATABASE_URL=
+   REDIS_URL=
+   RESEND_API_KEY=
+   CLOUDINARY_CLOUD_NAME=
+   CLOUDINARY_API_KEY=
+   CLOUDINARY_API_SECRET=
    ```
 
-3. **Start the services**
+3. **Start all services**
    ```bash
    docker-compose up --build
    ```
    
-   > **Note**: Migrations run automatically via the entrypoint script. No manual migration step needed!
+   This will:
+   - Build the optimized Docker image (multi-stage build)
+   - Start PostgreSQL with health checks
+   - Start Redis with persistence enabled
+   - Run database migrations automatically
+   - Create admin user automatically
+   - Start the FastAPI application
 
 4. **Wait for services to be ready**
-   - Database will initialize
+   - Database will initialize and run health checks
+   - Redis will start with authentication
    - **Migrations will run automatically** (via entrypoint.sh)
-   - Admin user will be created automatically
+   - Admin user will be created on first startup
    - API will start on http://localhost:8000
 
-5. **Seed the database** (in a new terminal)
+5. **Verify services are healthy**
+   ```bash
+   # Check health endpoint
+   curl http://localhost:8000/health
+   
+   # Should return status for PostgreSQL and Redis
+   ```
+
+6. **Seed the database** (optional - in a new terminal)
    ```bash
    docker-compose exec app python seed_data.py
    ```
 
-6. **Access the API**
+7. **Access the API**
    - API Docs: http://localhost:8000/docs
    - ReDoc: http://localhost:8000/redoc
    - Health Check: http://localhost:8000/health
+
+### Docker Commands Reference
+
+```bash
+# Start services in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f app
+
+# Stop services
+docker-compose down
+
+# Stop and remove volumes (WARNING: deletes data)
+docker-compose down -v
+
+# Rebuild after code changes
+docker-compose up --build
+
+# Execute commands in container
+docker-compose exec app alembic upgrade head
+docker-compose exec app python -m pytest
+
+# Access Redis CLI
+docker-compose exec redis redis-cli -a redispass
+
+# Access PostgreSQL
+docker-compose exec db psql -U propertyuser -d propertydb
+```
 
 ### Local Development (without Docker)
 
@@ -230,6 +288,7 @@ The application automatically creates an admin user on startup using credentials
    ```bash
    python -m venv venv
    venv\Scripts\activate  # Windows
+   source venv/bin/activate  # Linux/Mac
    ```
 
 2. **Install dependencies**
@@ -237,10 +296,12 @@ The application automatically creates an admin user on startup using credentials
    pip install -r requirements.txt
    ```
 
-3. **Set up PostgreSQL locally**
+3. **Set up PostgreSQL and Redis locally**
    ```bash
-   # Update DATABASE_URL in .env to point to your local PostgreSQL
+   # Install PostgreSQL and Redis on your system
+   # Update .env with local connection strings
    DATABASE_URL=postgresql://user:password@localhost:5432/propertydb
+   REDIS_URL=redis://localhost:6379/0
    ```
 
 4. **Run migrations**
@@ -257,6 +318,43 @@ The application automatically creates an admin user on startup using credentials
    ```bash
    uvicorn app.main:app --reload
    ```
+
+### Redis Integration
+
+The application uses Redis for:
+- **Caching** - API response caching for improved performance
+- **Session Management** - User session storage
+- **Rate Limiting** - API rate limiting (future enhancement)
+
+#### Using Redis Cache in Your Code
+
+```python
+from app.utils.redis_client import cache_set, cache_get, cache_delete
+from app.utils.cache import cached, invalidate_cache
+
+# Manual caching
+data = cache_get("my_key")
+if not data:
+    data = expensive_operation()
+    cache_set("my_key", data, ttl=600)  # Cache for 10 minutes
+
+# Using decorator
+@cached(prefix="properties", ttl=300)
+def get_all_properties(db: Session):
+    return db.query(Property).all()
+
+# Invalidate cache after updates
+invalidate_cache("properties:*")
+```
+
+#### Redis Health Check
+
+The `/health` endpoint includes Redis status:
+```bash
+curl http://localhost:8000/health
+```
+
+Response includes Redis connection status, version, and memory usage.
 
 ---
 
