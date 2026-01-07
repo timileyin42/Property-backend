@@ -12,6 +12,12 @@ class PropertyCreate(BaseModel):
     status: PropertyStatus = PropertyStatus.AVAILABLE
     image_urls: Optional[List[str]] = []
     
+    # Property details (optional)
+    bedrooms: Optional[int] = None
+    bathrooms: Optional[int] = None
+    area_sqft: Optional[float] = None
+    expected_roi: Optional[float] = None
+    
     # Fractional ownership (optional)
     total_fractions: Optional[int] = None
     fraction_price: Optional[float] = None
@@ -25,6 +31,12 @@ class PropertyUpdate(BaseModel):
     description: Optional[str] = None
     status: Optional[PropertyStatus] = None
     image_urls: Optional[List[str]] = None
+    
+    # Property details updates
+    bedrooms: Optional[int] = None
+    bathrooms: Optional[int] = None
+    area_sqft: Optional[float] = None
+    expected_roi: Optional[float] = None
     
     # Fractional ownership updates
     total_fractions: Optional[int] = None
@@ -42,6 +54,12 @@ class PropertyResponse(BaseModel):
     image_urls: List[str]
     created_at: datetime
     updated_at: datetime
+    
+    # Property details
+    bedrooms: Optional[int] = None
+    bathrooms: Optional[int] = None
+    area_sqft: Optional[float] = None
+    expected_roi: Optional[float] = None
     
     # Fractional ownership
     total_fractions: Optional[int] = None

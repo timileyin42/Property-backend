@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ARRAY
+from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ARRAY, Float
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -23,6 +23,12 @@ class Property(Base):
     description = Column(Text, nullable=True)
     status = Column(Enum(PropertyStatus), default=PropertyStatus.AVAILABLE, nullable=False)
     image_urls = Column(ARRAY(String), nullable=True, default=[])
+    
+    # Property details
+    bedrooms = Column(Integer, nullable=True)
+    bathrooms = Column(Integer, nullable=True)
+    area_sqft = Column(Float, nullable=True)
+    expected_roi = Column(Float, nullable=True)  # Expected ROI percentage
     
     # Fractional ownership fields
     total_fractions = Column(Integer, nullable=True)  # Total fractions available
