@@ -16,16 +16,35 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #2c3e50;
             color: white;
             padding: 40px;
             border-radius: 10px 10px 0 0;
             text-align: center;
         }
 
-        .header h1 {
-            margin: 0;
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-icon {
+            font-size: 36px;
+            margin-right: 12px;
+        }
+
+        .logo-text {
             font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .header h1 {
+            margin: 10px 0 0 0;
+            font-size: 28px;
+            font-weight: 600;
         }
 
         .content {
@@ -76,6 +95,10 @@
 
 <body>
     <div class="header">
+        <div class="logo">
+            <span class="logo-icon">🏢</span>
+            <span class="logo-text">POL Properties</span>
+        </div>
         <h1>✅ Thank You!</h1>
         <p style="margin: 10px 0 0 0;">We've received your inquiry</p>
     </div>
