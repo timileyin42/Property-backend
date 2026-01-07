@@ -216,3 +216,154 @@ def send_password_reset(
     except Exception as e:
         logger.error(f"Failed to send password reset email: {e}")
         return False
+
+
+def send_application_admin_notification(
+    application_id: int,
+    user_name: str,
+    user_email: str,
+    motivation: str,
+    investment_amount: Optional[float] = None,
+    experience: Optional[str] = None
+) -> bool:
+    """
+    Send email notification to admin about new investment application
+    
+    Args:
+        application_id: ID of the application
+        user_name: Applicant's name
+        user_email: Applicant's email
+        motivation: Why they want to invest
+        investment_amount: Expected investment amount
+        experience: Investment experience
+    
+    Returns:
+        True if sent successfully, False otherwise
+    """
+    try:
+        html_content = load_email_template(
+            "admin_application_notification",
+            application_id=application_id,
+            user_name=user_name,
+            user_email=user_email,
+            motivation=motivation,
+            investment_amount=f"${investment_amount:,.2f}" if investment_amount else "Not specified",
+            experience=experience or "Not specified",
+            admin_dashboard_url=f"{settings.FRONTEND_URL}/admin/applications"
+        )
+        
+        params = {
+            "from": settings.FROM_EMAIL,
+            "to": [settings.SALES_EMAIL],
+            "subject": f"New Investment Application from {user_name}",
+            "html": html_content,
+        }
+        
+        response = resend.Emails.send(params)
+        logger.info(f"Admin notification sent for application {application_id}: {response}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send admin application notification: {e}")
+        return False
+
+
+def send_application_approved(
+    email: str,
+    name: str,
+    admin_notes: Optional[str] = None
+) -> bool:
+    """
+    Send email notification to user that their application was approved
+    
+    Args:
+        email: User's email
+        name: User's name
+        admin_notes: Optional notes from admin
+    
+    Returns:
+        True if sent successfully, False otherwise
+    """
+    try:
+        # Format admin notes if present
+        notes_html = ""
+        if admin_notes:
+            notes_html = f'''
+            <div class="admin-note">
+                <strong>Message from our team:</strong><br>
+                {admin_notes}
+            </div>
+            '''
+        
+        html_content = load_email_template(
+            "application_approved",
+            user_name=name,
+            admin_notes=notes_html,
+            investor_dashboard_url=f"{settings.FRONTEND_URL}/investor/dashboard",
+            support_email=settings.FROM_EMAIL
+        )
+        
+        params = {
+            "from": settings.FROM_EMAIL,
+            "to": [email],
+            "subject": "🎉 Welcome to POL Properties - You're Now an Investor!",
+            "html": html_content,
+        }
+        
+        response = resend.Emails.send(params)
+        logger.info(f"Application approval email sent to {email}: {response}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send application approval email: {e}")
+        return False
+
+
+def send_application_rejected(
+    email: str,
+    name: str,
+    rejection_reason: Optional[str] = None
+) -> bool:
+    """
+    Send email notification to user that their application was rejected
+    
+    Args:
+        email: User's email
+        name: User's name
+        rejection_reason: Reason for rejection
+    
+    Returns:
+        True if sent successfully, False otherwise
+    """
+    try:
+        # Format rejection reason if present
+        reason_html = ""
+        if rejection_reason:
+            reason_html = f'''
+            <div class="reason-box">
+                <strong>Reason:</strong><br>
+                {rejection_reason}
+            </div>
+            '''
+        
+        html_content = load_email_template(
+            "application_rejected",
+            user_name=name,
+            rejection_reason=reason_html,
+            support_email=settings.FROM_EMAIL
+        )
+        
+        params = {
+            "from": settings.FROM_EMAIL,
+            "to": [email],
+            "subject": "Investment Application Update - POL Properties",
+            "html": html_content,
+        }
+        
+        response = resend.Emails.send(params)
+        logger.info(f"Application rejection email sent to {email}: {response}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send application rejection email: {e}")
+        return False

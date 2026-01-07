@@ -5,6 +5,7 @@ from app.schemas.user import UserCreate, UserUpdate, UserRoleUpdate, UserListRes
 from app.schemas.property import PropertyCreate, PropertyUpdate, PropertyResponse, PropertyListResponse
 from app.schemas.investment import InvestmentCreate, InvestmentUpdate, InvestmentResponse, InvestmentDetailResponse, InvestmentListResponse
 from app.schemas.update import UpdateCreate, UpdateResponse, UpdateListResponse
+from app.schemas.investment_application import InvestmentApplicationCreate, InvestmentApplicationUpdate, InvestmentApplicationReview, InvestmentApplicationResponse
 
 __all__ = [
     # Auth

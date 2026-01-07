@@ -43,3 +43,17 @@ class UserListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class ProfileUpdate(BaseModel):
+    """Schema for user profile update"""
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+
+
+class NotificationPreferences(BaseModel):
+    """Schema for notification preferences"""
+    email_on_inquiry_update: bool = True
+    email_on_property_update: bool = True
+    email_on_application_update: bool = True
+    email_marketing: bool = False

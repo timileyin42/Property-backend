@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = "admin@plugoflagosproperty.com"  # Reuse from admin user
     SALES_EMAIL: str = "sales@polproperties.com"  # Sales team email
     FROM_EMAIL: str = "noreply@polproperties.com"  # Sender email
+    FRONTEND_URL: str = "http://localhost:3000"  # Frontend URL for email links
     
     @property
     def cors_origins_list(self) -> List[str]:

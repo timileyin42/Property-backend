@@ -19,6 +19,9 @@ class PropertyInquiry(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     
+    # User link (optional - for authenticated inquiries)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    
     # Contact information
     name = Column(String, nullable=False)
     email = Column(String, nullable=False, index=True)
@@ -41,6 +44,7 @@ class PropertyInquiry(Base):
     
     # Relationships
     property = relationship("Property")
+    user = relationship("User", foreign_keys=[user_id], back_populates="inquiries")
     assigned_admin = relationship("User", foreign_keys=[assigned_admin_id])
     
     def __repr__(self):

@@ -8,6 +8,8 @@ from app.models.occupancy import PropertyOccupancy
 from app.models.revenue import PropertyRevenue
 from app.models.distribution import EarningsDistribution, DistributionStatus
 from app.models.inquiry import PropertyInquiry, InquiryStatus
+from app.models.wishlist import Wishlist
+from app.models.investment_application import InvestmentApplication, ApplicationStatus
 
 __all__ = [
     "User",
@@ -17,9 +19,12 @@ __all__ = [
     "Investment",
     "Update",
     "PropertyOccupancy",
+    "InvestmentApplication",
+    "ApplicationStatus",
     "PropertyRevenue",
     "EarningsDistribution",
     "DistributionStatus",
     "PropertyInquiry",
     "InquiryStatus",
+    "Wishlist",
 ]

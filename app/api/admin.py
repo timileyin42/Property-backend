@@ -6,15 +6,16 @@ from app.models.user import User, UserRole
 from app.models.property import Property
 from app.models.investment import Investment
 from app.models.update import Update
+from app.models.investment_application import InvestmentApplication, ApplicationStatus
 from app.schemas.user import UserListResponse, UserRoleUpdate, UserResponse
 from app.schemas.property import PropertyCreate, PropertyUpdate, PropertyResponse
 from app.schemas.investment import InvestmentCreate, InvestmentUpdate, InvestmentResponse
 from app.schemas.update import UpdateCreate, UpdateResponse
+from app.schemas.investment_application import InvestmentApplicationResponse, InvestmentApplicationReview
+from sqlalchemy.sql import func
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"], dependencies=[Depends(require_admin)])
 
-
-# ==================== USER MANAGEMENT ====================
 
 @router.get("/users", response_model=UserListResponse)
 def get_all_users(
@@ -77,8 +78,6 @@ def update_user_role(
     
     return user
 
-
-# ==================== PROPERTY MANAGEMENT ====================
 
 @router.post("/properties", response_model=PropertyResponse, status_code=status.HTTP_201_CREATED)
 def create_property(
@@ -149,8 +148,6 @@ def delete_property(
     
     return None
 
-
-# ==================== INVESTMENT MANAGEMENT ====================
 
 @router.post("/investments", response_model=InvestmentResponse, status_code=status.HTTP_201_CREATED)
 def assign_investment(
@@ -224,8 +221,6 @@ def update_investment_valuation(
     return investment
 
 
-# ==================== UPDATE/NEWS MANAGEMENT ====================
-
 @router.post("/updates", response_model=UpdateResponse, status_code=status.HTTP_201_CREATED)
 def create_update(
     update_data: UpdateCreate,
@@ -251,3 +246,109 @@ def create_update(
     db.refresh(new_update)
     
     return new_update
+
+
+@router.get("/investment-applications", response_model=list[InvestmentApplicationResponse])
+def get_all_applications(
+    status: ApplicationStatus = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Get all investment applications (admin only)
+    
+    Can filter by status (PENDING, UNDER_REVIEW, APPROVED, REJECTED)
+    """
+    query = db.query(InvestmentApplication)
+    
+    if status:
+        query = query.filter(InvestmentApplication.status == status)
+    
+    applications = query.order_by(InvestmentApplication.created_at.desc()).all()
+    
+    # Enrich with user and reviewer info
+    for app in applications:
+        app.user_name = app.user.full_name
+        app.user_email = app.user.email
+        if app.reviewer:
+            app.reviewer_name = app.reviewer.full_name
+    
+    return applications
+
+
+@router.patch("/investment-applications/{application_id}", response_model=InvestmentApplicationResponse)
+def review_application(
+    application_id: int,
+    review_data: InvestmentApplicationReview,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Review an investment application (admin only)
+    
+    Approve or reject applications. If approved, user's role is upgraded to INVESTOR.
+    """
+    from app.services.email_service import send_application_approved, send_application_rejected
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    application = db.query(InvestmentApplication).filter(
+        InvestmentApplication.id == application_id
+    ).first()
+    
+    if not application:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Application not found"
+        )
+    
+    # Get user for email notification
+    user = db.query(User).filter(User.id == application.user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Update application status
+    application.status = review_data.status
+    application.reviewed_by = current_user.id
+    application.reviewed_at = func.now()
+    application.admin_notes = review_data.admin_notes
+    application.rejection_reason = review_data.rejection_reason
+    
+    # If approved, upgrade user role to INVESTOR
+    if review_data.status == ApplicationStatus.APPROVED:
+        user.role = UserRole.INVESTOR
+        
+        # Send approval email
+        try:
+            send_application_approved(
+                email=user.email,
+                name=user.full_name,
+                admin_notes=review_data.admin_notes
+            )
+        except Exception as e:
+            logger.error(f"Failed to send approval email to {user.email}: {e}")
+    
+    # If rejected, send rejection email
+    elif review_data.status == ApplicationStatus.REJECTED:
+        try:
+            send_application_rejected(
+                email=user.email,
+                name=user.full_name,
+                rejection_reason=review_data.rejection_reason
+            )
+        except Exception as e:
+            logger.error(f"Failed to send rejection email to {user.email}: {e}")
+    
+    db.commit()
+    db.refresh(application)
+    
+    # Enrich response
+    application.user_name = application.user.full_name
+    application.user_email = application.user.email
+    application.reviewer_name = current_user.full_name
+    
+    return application

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.startup import startup_tasks
-from app.api import auth, public, admin, investor, media
+from app.api import auth, public, admin, investor, media, user
 from app.api import shortlet, investor_shortlet, inquiries
 
 
@@ -40,6 +40,7 @@ app.add_middleware(
 # Register routers
 app.include_router(auth.router)
 app.include_router(public.router)
+app.include_router(user.router)  # New: User dashboard endpoints
 app.include_router(admin.router)
 app.include_router(investor.router)
 app.include_router(media.router)

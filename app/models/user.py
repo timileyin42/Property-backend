@@ -39,6 +39,9 @@ class User(Base):
     
     # Relationships
     investments = relationship("Investment", back_populates="user", cascade="all, delete-orphan")
+    inquiries = relationship("PropertyInquiry", back_populates="user", foreign_keys="PropertyInquiry.user_id", cascade="all, delete-orphan")
+    wishlist_items = relationship("Wishlist", back_populates="user", cascade="all, delete-orphan")
+    investment_applications = relationship("InvestmentApplication", back_populates="user", foreign_keys="InvestmentApplication.user_id", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email}, role={self.role})>"
