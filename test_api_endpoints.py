@@ -34,8 +34,8 @@ def get_db_connection():
                 host=parsed.hostname or "localhost",
                 port=parsed.port or 5433,
                 database=parsed.path.lstrip('/') if parsed.path else "propertydb",
-                user=parsed.username or "propertyuser",
-                password=parsed.password or "propertypass"
+                user=parsed.username,
+                password=parsed.password
             )
         else:
             # Fallback to individual environment variables or defaults for local dev
