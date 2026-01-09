@@ -50,17 +50,17 @@ jobs:
             git pull origin main || git pull origin master
 
             # Stop the running container
-            docker-compose down
-
+            docker compose down
+            
             # Rebuild and start containers
-            docker-compose build --no-cache
-            docker-compose up -d
-
+            docker compose build --no-cache
+            docker compose up -d
+            
             # Run database migrations
-            docker-compose exec -T app alembic upgrade head
-
+            docker compose exec -T app alembic upgrade head
+            
             # Show container status
-            docker-compose ps
+            docker compose ps
 
             # Clean up old images
             docker image prune -f
