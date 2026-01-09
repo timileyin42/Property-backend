@@ -1,24 +1,4 @@
 services:
-  db:
-    image: postgres:15-alpine
-    container_name: property_db
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
-    ports:
-      - "${HOST_POSTGRES_PORT:-5433}:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-propertyuser}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - property_network
-
   # Redis Cache
   redis:
     image: redis:7-alpine
@@ -47,10 +27,10 @@ services:
     env_file:
       - .env
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
+    external_links:
+      - property_db:db
     volumes:
       - ./app:/app/app
       - ./alembic:/app/alembic
