@@ -21,6 +21,13 @@ jobs:
           HOST: ${{ secrets.EC2_HOST }}
           USER: ${{ secrets.EC2_USER }}
         run: |
+          set -euo pipefail
+
+          if [ -z "$PRIVATE_KEY" ] || [ -z "$HOST" ] || [ -z "$USER" ]; then
+            echo "Missing required secrets. Ensure EC2_SSH_PRIVATE_KEY, EC2_HOST, and EC2_USER are set." >&2
+            exit 1
+          fi
+
           # Save private key to file
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
@@ -28,34 +35,34 @@ jobs:
           # Add EC2 host to known hosts
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
           
           # Deploy to EC2
-          ssh -i private_key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
+          ssh -i private_key.pem -o StrictHostKeyChecking=no "$USER"@"$HOST" << 'EOF'
             set -e
-            
+
             # Navigate to project directory
             cd ~/Property-backend || exit 1
-            
+
             # Pull latest changes
             git pull origin main || git pull origin master
-            
+
             # Stop the running container
             docker-compose down
-            
+
             # Rebuild and start containers
             docker-compose build --no-cache
             docker-compose up -d
-            
+
             # Run database migrations
             docker-compose exec -T app alembic upgrade head
-            
+
             # Show container status
             docker-compose ps
-            
+
             # Clean up old images
             docker image prune -f
-            
+
             echo "Deployment completed successfully!"
           EOF
           
