@@ -9,12 +9,67 @@ from app.models.update import Update
 from app.models.investment_application import InvestmentApplication, ApplicationStatus
 from app.schemas.user import UserListResponse, UserRoleUpdate, UserResponse
 from app.schemas.property import PropertyCreate, PropertyUpdate, PropertyResponse
-from app.schemas.investment import InvestmentCreate, InvestmentUpdate, InvestmentResponse
+from app.schemas.investment import (
+    InvestmentCreate,
+    InvestmentUpdate,
+    InvestmentResponse,
+    InvestmentListResponse,
+)
 from app.schemas.update import UpdateCreate, UpdateResponse
 from app.schemas.investment_application import InvestmentApplicationResponse, InvestmentApplicationReview
 from sqlalchemy.sql import func
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"], dependencies=[Depends(require_admin)])
+
+
+@router.get("/investments", response_model=InvestmentListResponse)
+def list_investments(
+    page: int = 1,
+    page_size: int = 20,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """List all investments with property info (admin only)."""
+    query = db.query(Investment)
+    total = query.count()
+    skip = (page - 1) * page_size
+    investments = query.order_by(Investment.created_at.desc()).offset(skip).limit(page_size).all()
+
+    responses: list[InvestmentResponse] = []
+    for inv in investments:
+        prop = db.query(Property).filter(Property.id == inv.property_id).first()
+        responses.append(
+            InvestmentResponse(
+                id=inv.id,
+                user_id=inv.user_id,
+                property_id=inv.property_id,
+                fractions_owned=inv.fractions_owned,
+                ownership_percentage=inv.ownership_percentage,
+                initial_value=inv.initial_value,
+                current_value=inv.current_value,
+                growth_percentage=inv.growth_percentage,
+                growth_amount=inv.growth_amount,
+                created_at=inv.created_at,
+                updated_at=inv.updated_at,
+                property_title=prop.title if prop else None,
+                property_location=prop.location if prop else None,
+            )
+        )
+
+    # Aggregate totals
+    total_initial = sum(inv.initial_value for inv in investments)
+    total_current = sum(inv.current_value for inv in investments)
+    total_growth_pct = (
+        ((total_current - total_initial) / total_initial * 100) if total_initial > 0 else 0
+    )
+
+    return InvestmentListResponse(
+        investments=responses,
+        total=total,
+        total_initial_value=total_initial,
+        total_current_value=total_current,
+        total_growth_percentage=total_growth_pct,
+    )
 
 
 @router.get("/users", response_model=UserListResponse)

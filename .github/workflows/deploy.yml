@@ -1,0 +1,68 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to EC2
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+        run: |
+          # Save private key to file
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          
+          # Add EC2 host to known hosts
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
+          
+          # Deploy to EC2
+          ssh -i private_key.pem -o StrictHostKeyChecking=no $USER@$HOST << 'EOF'
+            set -e
+            
+            # Navigate to project directory
+            cd ~/Property-backend || exit 1
+            
+            # Pull latest changes
+            git pull origin main || git pull origin master
+            
+            # Stop the running container
+            docker-compose down
+            
+            # Rebuild and start containers
+            docker-compose build --no-cache
+            docker-compose up -d
+            
+            # Run database migrations
+            docker-compose exec -T app alembic upgrade head
+            
+            # Show container status
+            docker-compose ps
+            
+            # Clean up old images
+            docker image prune -f
+            
+            echo "Deployment completed successfully!"
+          EOF
+          
+          # Clean up private key
+          rm -f private_key.pem
+
+      - name: Verify deployment
+        env:
+          HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          sleep 10
+          curl -f http://$HOST:8000/health || echo "Health check failed, but deployment completed"

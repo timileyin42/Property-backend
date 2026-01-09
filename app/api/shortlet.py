@@ -307,8 +307,8 @@ def get_all_distributions(
     
     # Enrich with property info
     for dist in distributions:
-        if dist.investment and dist.investment.property:
-            dist.property_title = dist.investment.property.title
+        if dist.investment and dist.investment.investment_property:
+            dist.property_title = dist.investment.investment_property.title
         if dist.revenue:
             dist.period_label = dist.revenue.period_label
     

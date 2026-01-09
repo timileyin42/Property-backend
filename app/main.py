@@ -1,10 +1,14 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.startup import startup_tasks
 from app.api import auth, public, admin, investor, media, user
 from app.api import shortlet, investor_shortlet, inquiries
+import logging
+import time
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -27,6 +31,29 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan
 )
+
+
+# Request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log all incoming requests and responses"""
+    start_time = time.time()
+    
+    # Log request
+    logger.info(f"→ {request.method} {request.url.path}")
+    
+    # Process request
+    response = await call_next(request)
+    
+    # Log response
+    process_time = time.time() - start_time
+    logger.info(
+        f"← {request.method} {request.url.path} "
+        f"Status: {response.status_code} "
+        f"Time: {process_time:.3f}s"
+    )
+    
+    return response
 
 # Configure CORS
 app.add_middleware(

@@ -1,34 +1,9 @@
-version: '3.8'
-
 services:
-  # PostgreSQL Database
-  db:
-    image: postgres:15-alpine
-    container_name: property_db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: propertyuser
-      POSTGRES_PASSWORD: propertypass
-      POSTGRES_DB: propertydb
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U propertyuser -d propertydb"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - property_network
-
   # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: property_redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes --requirepass redispass
@@ -49,18 +24,9 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
-    environment:
-      DATABASE_URL: postgresql://propertyuser:propertypass@db:5432/propertydb
-      REDIS_URL: redis://:redispass@redis:6379/0
-      SECRET_KEY: dev-secret-key-change-in-production-min-32-characters-long
-      ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 30
-      REFRESH_TOKEN_EXPIRE_DAYS: 7
-      DEBUG: "True"
-      CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost:8080
+    env_file:
+      - .env
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
     volumes:
@@ -70,8 +36,6 @@ services:
       - property_network
 
 volumes:
-  postgres_data:
-    driver: local
   redis_data:
     driver: local
 

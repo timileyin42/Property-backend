@@ -36,8 +36,17 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    user_id: Optional[int] = payload.get("sub")
-    if user_id is None:
+    raw_user_id = payload.get("sub")
+    if raw_user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        user_id = int(raw_user_id)
+    except (TypeError, ValueError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication credentials",

@@ -40,10 +40,10 @@ class Property(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     
     # Relationships
-    investments = relationship("Investment", back_populates="property", cascade="all, delete-orphan")
-    updates = relationship("Update", back_populates="property", cascade="all, delete-orphan")
-    occupancy_records = relationship("PropertyOccupancy", back_populates="property", cascade="all, delete-orphan")
-    revenue_records = relationship("PropertyRevenue", back_populates="property", cascade="all, delete-orphan")
+    investments = relationship("Investment", back_populates="investment_property", cascade="all, delete-orphan")
+    updates = relationship("Update", back_populates="related_property", cascade="all, delete-orphan")
+    occupancy_records = relationship("PropertyOccupancy", back_populates="related_property", cascade="all, delete-orphan")
+    revenue_records = relationship("PropertyRevenue", back_populates="related_property", cascade="all, delete-orphan")
     
     @property
     def fractions_available(self) -> int:

@@ -28,10 +28,10 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str
     
     # Admin User (auto-created on startup)
-    ADMIN_EMAIL: str = "admin@plugoflagosproperty.com"
-    ADMIN_PASSWORD: str = "ChangeThisPassword123!"
-    ADMIN_NAME: str = "System Administrator"
-    ADMIN_PHONE: str = "+234-800-000-0001"
+    ADMIN_EMAIL: str
+    ADMIN_PASSWORD: str
+    ADMIN_NAME: str
+    ADMIN_PHONE: str
     
     # Cloudinary Configuration
     CLOUDINARY_CLOUD_NAME: str
@@ -41,10 +41,10 @@ class Settings(BaseSettings):
     
     # Email Configuration (Resend)
     RESEND_API_KEY: str
-    ADMIN_EMAIL: str = "admin@plugoflagosproperty.com"  # Reuse from admin user
-    SALES_EMAIL: str = "sales@polproperties.com"  # Sales team email
-    FROM_EMAIL: str = "noreply@polproperties.com"  # Sender email
-    FRONTEND_URL: str = "http://localhost:3000"  # Frontend URL for email links
+    ADMIN_EMAIL: str
+    SALES_EMAIL: str
+    FROM_EMAIL: str
+    FRONTEND_URL: str
     
     @property
     def cors_origins_list(self) -> List[str]:

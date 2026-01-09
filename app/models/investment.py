@@ -24,14 +24,14 @@ class Investment(Base):
     
     # Relationships
     user = relationship("User", back_populates="investments")
-    property = relationship("Property", back_populates="investments")
+    investment_property = relationship("Property", back_populates="investments")
     earnings_distributions = relationship("EarningsDistribution", back_populates="investment", cascade="all, delete-orphan")
     
     @property
     def ownership_percentage(self) -> float:
         """Calculate ownership percentage for fractional properties"""
-        if self.fractions_owned and self.property and self.property.total_fractions:
-            return (self.fractions_owned / self.property.total_fractions) * 100
+        if self.fractions_owned and self.investment_property and self.investment_property.total_fractions:
+            return (self.fractions_owned / self.investment_property.total_fractions) * 100
         return 0.0
     
     @property

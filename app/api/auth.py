@@ -104,9 +104,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             detail="Email not verified. Please check your email for verification code."
         )
     
-    # Generate tokens
-    access_token = create_access_token(data={"sub": user.email})
-    refresh_token = create_refresh_token(data={"sub": user.email})
+    # Generate tokens with numeric subject (user id) and include email for reference
+    access_token = create_access_token(data={"sub": str(user.id), "email": user.email})
+    refresh_token = create_refresh_token(data={"sub": str(user.id), "email": user.email})
     
     return TokenResponse(
         access_token=access_token,

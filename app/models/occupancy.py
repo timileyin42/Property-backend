@@ -28,7 +28,7 @@ class PropertyOccupancy(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     
     # Relationships
-    property = relationship("Property", back_populates="occupancy_records")
+    related_property = relationship("Property", back_populates="occupancy_records")
     creator = relationship("User", foreign_keys=[created_by])
     
     @property

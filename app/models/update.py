@@ -19,7 +19,7 @@ class Update(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     
     # Relationships
-    property = relationship("Property", back_populates="updates")
+    related_property = relationship("Property", back_populates="updates")
     
     def __repr__(self):
         return f"<Update(id={self.id}, title={self.title})>"

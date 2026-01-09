@@ -8,6 +8,19 @@ from app.core.config import settings
 from app.models.user import User, UserRole
 from app.utils.hashing import hash_password
 import logging
+import sys
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+# Enable SQLAlchemy query logging
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +37,9 @@ def create_admin_user():
         admin = db.query(User).filter(User.email == settings.ADMIN_EMAIL).first()
         
         if admin:
-            logger.info(f" Admin user already exists: {settings.ADMIN_EMAIL}")
+            message = f"Admin user already exists: {settings.ADMIN_EMAIL}"
+            logger.info(message)
+            print(message)
             return
         
         # Create admin user
@@ -42,7 +57,9 @@ def create_admin_user():
         db.commit()
         db.refresh(admin)
         
-        logger.info(f" Admin user created successfully: {settings.ADMIN_EMAIL}")
+        message = f"Admin user created successfully: {settings.ADMIN_EMAIL}"
+        logger.info(message)
+        print(message)
         
     except Exception as e:
         logger.error(f" Error creating admin user: {e}")

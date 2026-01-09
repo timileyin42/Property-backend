@@ -32,7 +32,7 @@ class PropertyRevenue(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     
     # Relationships
-    property = relationship("Property", back_populates="revenue_records")
+    related_property = relationship("Property", back_populates="revenue_records")
     creator = relationship("User", foreign_keys=[created_by])
     distributions = relationship("EarningsDistribution", back_populates="revenue", cascade="all, delete-orphan")
     
