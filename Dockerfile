@@ -20,10 +20,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy and install Python dependencies
+# Copy and install Python dependencies (system-wide)
 COPY requirements.txt .
 RUN pip install --upgrade pip setuptools wheel && \
-    pip install --user --no-warn-script-location -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime
 FROM python:3.11-slim
@@ -34,8 +34,7 @@ WORKDIR /app
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    DEBIAN_FRONTEND=noninteractive \
-    PATH=/root/.local/bin:$PATH
+    DEBIAN_FRONTEND=noninteractive
 
 # Install runtime dependencies only
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -45,8 +44,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Copy Python packages from builder
-COPY --from=builder /root/.local /root/.local
+# Copy installed Python packages from builder
+COPY --from=builder /usr/local /usr/local
 
 # Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
