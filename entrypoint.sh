@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-echo "Running database migrations (alembic upgrade head)..."
-alembic upgrade head
+echo "Running database migrations (python -m alembic upgrade head)..."
+python -m alembic upgrade head
 
 echo "Starting application..."
 exec "$@"
