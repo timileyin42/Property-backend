@@ -26,6 +26,8 @@ jobs:
           chmod 600 private_key.pem
           
           # Add EC2 host to known hosts
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
           
           # Deploy to EC2
