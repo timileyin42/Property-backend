@@ -37,4 +37,4 @@ resend==0.8.0
 
 # Caching & Session Management
 redis==5.0.1
-# hiredis==2.3.2  # Removed - requires C++ build tools on Windows, optional performance enhancement
+
