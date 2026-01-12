@@ -52,8 +52,8 @@ jobs:
             # Stop the running container
             docker compose down
             
-            # Rebuild and start containers
-            docker compose build --no-cache
+            # Rebuild and start containers (use cache for faster builds)
+            docker compose build
             docker compose up -d
             
             # Run database migrations
