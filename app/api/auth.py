@@ -11,13 +11,14 @@ from app.utils.hashing import hash_password, verify_password
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 
-@router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 def signup(request: SignupRequest, db: Session = Depends(get_db)):
     """
     User signup endpoint - creates new user account with email verification
     
     New users start with USER role and is_verified=False.
     OTP is sent to email for verification.
+    Returns access token for immediate login.
     """
     from app.services.email_service import send_verification_otp, generate_otp
     from datetime import datetime, timedelta
@@ -61,14 +62,23 @@ def signup(request: SignupRequest, db: Session = Depends(get_db)):
         # Log error but don't fail signup
         print(f"Failed to send verification email: {e}")
     
-    return UserResponse(
-        id=new_user.id,
-        email=new_user.email,
-        full_name=new_user.full_name,
-        phone=new_user.phone,
-        role=new_user.role,
-        is_verified=new_user.is_verified,
-        created_at=new_user.created_at
+    # Generate tokens for immediate login
+    access_token = create_access_token(data={"sub": str(new_user.id)})
+    refresh_token = create_refresh_token(data={"sub": str(new_user.id)})
+    
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",
+        user=UserResponse(
+            id=new_user.id,
+            email=new_user.email,
+            full_name=new_user.full_name,
+            phone=new_user.phone,
+            role=new_user.role,
+            is_verified=new_user.is_verified,
+            created_at=new_user.created_at
+        )
     )
 
 

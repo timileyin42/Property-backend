@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
-    description="Property Investment Platform API - POL Properties",
+    description="Property Investment Platform API - Elycap Luxury Homes",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan
@@ -67,7 +67,7 @@ app.add_middleware(
 # Register routers
 app.include_router(auth.router)
 app.include_router(public.router)
-app.include_router(user.router)  # New: User dashboard endpoints
+app.include_router(user.router)
 app.include_router(admin.router)
 app.include_router(investor.router)
 app.include_router(media.router)
@@ -80,7 +80,7 @@ app.include_router(inquiries.router)
 def root():
     """Root endpoint"""
     return {
-        "message": "Welcome to POL Properties API",
+        "message": "Welcome Elycap Luxury Homes API",
         "version": settings.APP_VERSION,
         "docs": "/docs"
     }
