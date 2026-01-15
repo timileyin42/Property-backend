@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from datetime import datetime, timedelta, timezone
 from app.core.database import get_db
 from app.core.security import create_access_token, create_refresh_token
 from app.core.permissions import get_current_user
@@ -21,7 +22,6 @@ def signup(request: SignupRequest, db: Session = Depends(get_db)):
     Returns access token for immediate login.
     """
     from app.services.email_service import send_verification_otp, generate_otp
-    from datetime import datetime, timedelta
     
     # Check if email already exists
     existing_user = db.query(User).filter(User.email == request.email).first()
@@ -33,7 +33,7 @@ def signup(request: SignupRequest, db: Session = Depends(get_db)):
     
     # Generate OTP
     otp_code = generate_otp()
-    otp_expires = datetime.utcnow() + timedelta(minutes=15)  # 15 minutes expiry
+    otp_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
     
     # Create new user (unverified)
     new_user = User(
@@ -150,7 +150,6 @@ def verify_email(
     Returns:
         Success message
     """
-    from datetime import datetime
     
     # Find user
     user = db.query(User).filter(User.email == email).first()
@@ -172,7 +171,7 @@ def verify_email(
         )
     
     # Check expiry
-    if user.verification_token_expires and user.verification_token_expires < datetime.utcnow():
+    if user.verification_token_expires and user.verification_token_expires < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Verification code expired. Please request a new one."
@@ -206,7 +205,6 @@ def resend_otp(
         Success message
     """
     from app.services.email_service import send_verification_otp, generate_otp
-    from datetime import datetime, timedelta
     
     # Find user
     user = db.query(User).filter(User.email == email).first()
@@ -222,7 +220,7 @@ def resend_otp(
     
     # Generate new OTP
     otp_code = generate_otp()
-    otp_expires = datetime.utcnow() + timedelta(minutes=15)
+    otp_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
     
     # Update user
     user.verification_token = otp_code

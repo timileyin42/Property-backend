@@ -31,8 +31,12 @@ def load_email_template(template_name: str, **kwargs) -> str:
         with open(template_path, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        # Simple template variable replacement
-        for key, value in kwargs.items():
+        context = {
+            "app_name": settings.APP_NAME,
+            **kwargs,
+        }
+        
+        for key, value in context.items():
             content = content.replace(f"{{{{{key}}}}}", str(value))
         
         return content
