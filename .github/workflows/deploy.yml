@@ -46,8 +46,18 @@ jobs:
             # Navigate to project directory
             cd ~/Property-backend || exit 1
 
-            # Pull latest changes
-            git pull origin main || git pull origin master
+            # Pull latest changes (force sync with remote, handle main/master)
+            if git ls-remote --exit-code origin main >/dev/null 2>&1; then
+              BRANCH=main
+            elif git ls-remote --exit-code origin master >/dev/null 2>&1; then
+              BRANCH=master
+            else
+              echo "Neither 'main' nor 'master' branch exists on origin" >&2
+              exit 1
+            fi
+
+            git fetch origin "$BRANCH"
+            git reset --hard "origin/$BRANCH"
 
             # Stop the running container
             docker compose down
