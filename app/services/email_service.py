@@ -112,11 +112,14 @@ def send_inquiry_user_acknowledgement(
             name=name,
             property_title=property_title or "our properties"
         )
+        if not html_content:
+            logger.error("Email content is empty for user inquiry acknowledgement")
+            return False
         
         params = {
             "from": settings.FROM_EMAIL,
             "to": [email],
-            "subject": "Thank you for your inquiry - POL Properties",
+            "subject": f"Thank you for your inquiry - {settings.APP_NAME}",
             "html": html_content,
         }
         
@@ -151,11 +154,14 @@ def send_verification_otp(
             name=name,
             otp_code=otp_code
         )
+        if not html_content:
+            logger.error("Email content is empty for verification OTP")
+            return False
         
         params = {
             "from": settings.FROM_EMAIL,
             "to": [email],
-            "subject": "Verify Your Email - POL Properties",
+            "subject": f"Verify Your Email - {settings.APP_NAME}",
             "html": html_content,
         }
         
@@ -201,11 +207,14 @@ def send_password_reset(
             name=name,
             reset_code=reset_code
         )
+        if not html_content:
+            logger.error("Email content is empty for password reset")
+            return False
         
         params = {
             "from": settings.FROM_EMAIL,
             "to": [email],
-            "subject": "Reset Your Password - POL Properties",
+            "subject": f"Reset Your Password - {settings.APP_NAME}",
             "html": html_content,
         }
         
@@ -251,6 +260,9 @@ def send_application_admin_notification(
             experience=experience or "Not specified",
             admin_dashboard_url=f"{settings.FRONTEND_URL}/admin/applications"
         )
+        if not html_content:
+            logger.error("Email content is empty for admin application notification")
+            return False
         
         params = {
             "from": settings.FROM_EMAIL,
@@ -302,11 +314,14 @@ def send_application_approved(
             investor_dashboard_url=f"{settings.FRONTEND_URL}/investor/dashboard",
             support_email=settings.FROM_EMAIL
         )
+        if not html_content:
+            logger.error("Email content is empty for application approval")
+            return False
         
         params = {
             "from": settings.FROM_EMAIL,
             "to": [email],
-            "subject": "🎉 Welcome to POL Properties - You're Now an Investor!",
+            "subject": f"🎉 Welcome to {settings.APP_NAME} - You're Now an Investor!",
             "html": html_content,
         }
         
@@ -352,11 +367,14 @@ def send_application_rejected(
             rejection_reason=reason_html,
             support_email=settings.FROM_EMAIL
         )
+        if not html_content:
+            logger.error("Email content is empty for application rejection")
+            return False
         
         params = {
             "from": settings.FROM_EMAIL,
             "to": [email],
-            "subject": "Investment Application Update - POL Properties",
+            "subject": f"Investment Application Update - {settings.APP_NAME}",
             "html": html_content,
         }
         
