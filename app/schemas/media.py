@@ -12,12 +12,14 @@ class UploadSignatureResponse(BaseModel):
     upload_url: str
     resource_type: Optional[str] = None
     allowed_formats: Optional[str] = None
+    background: bool = False
 
 
 class MediaUploadRequest(BaseModel):
     """Request schema for media upload signature"""
     property_id: Optional[int] = None
     resource_type: str = "image"  # image or video
+    file_size_bytes: Optional[int] = None
 
 
 class MediaDeleteRequest(BaseModel):

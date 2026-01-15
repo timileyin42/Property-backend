@@ -30,6 +30,7 @@ def get_upload_signature(
     **Args:**
     - property_id: Optional property ID to organize uploads
     - resource_type: "image" or "video"
+    - file_size_bytes: Optional file size in bytes (used to decide background uploads)
     
     **Returns:**
     - signature: Cloudinary signature for authentication
@@ -38,13 +39,22 @@ def get_upload_signature(
     - cloud_name: Cloudinary cloud name
     - folder: Upload folder path
     - upload_url: Cloudinary upload endpoint URL
+    - background: Whether this upload should be treated as background (large files)
     """
     if request.resource_type == "video":
         signature_data = generate_video_upload_signature(request.property_id)
     else:
         signature_data = generate_image_upload_signature(request.property_id)
     
-    return UploadSignatureResponse(**signature_data)
+    is_large = bool(
+        request.file_size_bytes is not None
+        and request.file_size_bytes >= 10 * 1024 * 1024
+    )
+    
+    return UploadSignatureResponse(
+        **signature_data,
+        background=is_large
+    )
 
 
 @router.post("/delete", response_model=MediaDeleteResponse)
