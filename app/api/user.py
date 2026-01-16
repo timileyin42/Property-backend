@@ -109,11 +109,14 @@ def submit_authenticated_inquiry(
         )
     
     # Create inquiry
+    safe_name = current_user.full_name or (current_user.email or "User")
+    safe_email = current_user.email or "no-reply@example.com"
+    safe_phone = current_user.phone or "Not provided"
     inquiry = PropertyInquiry(
         user_id=current_user.id,
-        name=current_user.full_name,
-        email=current_user.email,
-        phone=current_user.phone or "Not provided",
+        name=safe_name,
+        email=safe_email,
+        phone=safe_phone,
         message=message,
         property_id=property_id
     )
@@ -126,16 +129,16 @@ def submit_authenticated_inquiry(
     try:
         send_inquiry_admin_notification(
             inquiry_id=inquiry.id,
-            name=current_user.full_name,
-            email=current_user.email,
-            phone=current_user.phone or "Not provided",
+            name=safe_name,
+            email=safe_email,
+            phone=safe_phone,
             message=message,
             property_title=property.title
         )
         
         send_inquiry_user_acknowledgement(
-            name=current_user.full_name,
-            email=current_user.email,
+            name=safe_name,
+            email=safe_email,
             property_title=property.title
         )
     except Exception as e:

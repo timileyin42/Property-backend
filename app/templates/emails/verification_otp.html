@@ -34,12 +34,26 @@
             font-size: 36px;
             margin-right: 12px;
         }
+        .logo-mark {
+            display: inline-block;
+            padding: 4px;
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .logo-bar {
+            display: inline-block;
+            width: 6px;
+            height: 18px;
+            background: #667eea;
+            margin: 0 2px;
+            vertical-align: bottom;
+        }
 
         .logo-text {
             font-size: 28px;
             font-weight: 700;
             letter-spacing: 1px;
-        }
 
         .header h1 {
             margin: 10px 0 0 0;
@@ -106,8 +120,16 @@
 
 <body>
     <div class="header">
-        <h1>🔐 Verify Your Email</h1>
-        <p style="margin: 10px 0 0 0;">Welcome to Elycap Luxury Homes!</p>
+        <div class="logo">
+            <span class="logo-mark">
+                <span class="logo-bar"></span>
+                <span class="logo-bar" style="height:22px;"></span>
+                <span class="logo-bar" style="height:16px;"></span>
+            </span>
+            <span class="logo-text">{{app_name}}</span>
+        </div>
+        <h1>Verify Your Email</h1>
+        <p style="margin: 10px 0 0 0;">Welcome to {{app_name}}!</p>
     </div>
 
     <div class="content">
@@ -147,7 +169,7 @@
     </div>
 
     <div class="footer">
-        <p><strong>Elycap Luxury Homes</strong></p>
+        <p><strong>{{app_name}}</strong></p>
         <p>Luxury Property Investment Platform</p>
         <p style="margin-top: 20px; font-size: 12px;">
             This is an automated email. Please do not reply.<br>
