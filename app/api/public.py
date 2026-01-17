@@ -36,6 +36,10 @@ def get_properties(
     skip = (page - 1) * page_size
     properties = query.order_by(Property.created_at.desc()).offset(skip).limit(page_size).all()
     
+    # Enrich with primary image URL
+    for property in properties:
+        property.primary_image = property.image_urls[0] if property.image_urls else None
+    
     return PropertyListResponse(
         properties=properties,
         total=total,
@@ -56,6 +60,9 @@ def get_property(property_id: int, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Property not found"
         )
+    
+    # Enrich with primary image URL
+    property.primary_image = property.image_urls[0] if property.image_urls else None
     
     return property
 

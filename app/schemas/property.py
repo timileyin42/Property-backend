@@ -52,6 +52,7 @@ class PropertyResponse(BaseModel):
     description: Optional[str]
     status: PropertyStatus
     image_urls: List[str]
+    primary_image: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     
