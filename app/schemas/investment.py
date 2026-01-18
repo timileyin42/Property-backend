@@ -10,6 +10,7 @@ class InvestmentCreate(BaseModel):
     fractions_owned: Optional[int] = None  # For fractional properties
     initial_value: float = Field(..., gt=0)
     current_value: float = Field(..., gt=0)
+    image_url: Optional[str] = None
 
 
 class InvestmentUpdate(BaseModel):
@@ -28,6 +29,7 @@ class InvestmentResponse(BaseModel):
     current_value: float
     growth_percentage: float
     growth_amount: float
+    image_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     
@@ -48,6 +50,7 @@ class InvestmentDetailResponse(BaseModel):
     current_value: float
     growth_percentage: float
     growth_amount: float
+    image_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     

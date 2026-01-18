@@ -8,6 +8,7 @@ class UpdateCreate(BaseModel):
     property_id: Optional[int] = None
     title: str = Field(..., min_length=3)
     content: str = Field(..., min_length=10)
+    image_url: Optional[str] = None
 
 
 class UpdateResponse(BaseModel):
@@ -16,6 +17,7 @@ class UpdateResponse(BaseModel):
     property_id: Optional[int]
     title: str
     content: str
+    image_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     

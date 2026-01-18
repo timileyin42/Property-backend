@@ -49,3 +49,4 @@ htmlcov/
 # Docker
 docker-compose.local.yml
 setup_accounts.py
+delete_user.py

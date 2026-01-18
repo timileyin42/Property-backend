@@ -14,37 +14,47 @@
             padding: 20px;
         }
         .header {
-            background: #2c3e50;
+            background: #143C86;
             color: white;
-            padding: 30px;
+            padding: 36px 24px 30px;
             border-radius: 10px 10px 0 0;
             text-align: center;
         }
-        .logo {
+        .brand-badge {
             display: inline-flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
-        .logo-mark {
+        .brand-logo {
+            width: 56px;
+            height: 56px;
+            border-radius: 18px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+        .brand-logo-mark {
             display: inline-block;
-            padding: 4px;
-            border: 2px solid #667eea;
-            border-radius: 4px;
-            margin-right: 10px;
+            padding: 6px;
+            border-radius: 6px;
+            border: 2px solid #143C86;
         }
-        .logo-bar {
+        .brand-logo-bar {
             display: inline-block;
             width: 6px;
             height: 18px;
-            background: #667eea;
+            background: #143C86;
             margin: 0 2px;
             vertical-align: bottom;
         }
-        .logo-text {
-            font-size: 24px;
-            font-weight: 700;
-            letter-spacing: 1px;
+        .brand-name {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
         }
         .header h1 {
             margin: 10px 0 0 0;
@@ -90,13 +100,15 @@
 </head>
 <body>
     <div class="header">
-        <div class="logo">
-            <span class="logo-mark">
-                <span class="logo-bar"></span>
-                <span class="logo-bar" style="height:22px;"></span>
-                <span class="logo-bar" style="height:16px;"></span>
-            </span>
-            <span class="logo-text">{{app_name}}</span>
+        <div class="brand-badge">
+            <div class="brand-logo">
+                <span class="brand-logo-mark">
+                    <span class="brand-logo-bar"></span>
+                    <span class="brand-logo-bar" style="height:22px;"></span>
+                    <span class="brand-logo-bar" style="height:16px;"></span>
+                </span>
+            </div>
+            <div class="brand-name">{{app_name}}</div>
         </div>
         <h1>Investment Application Update</h1>
     </div>
