@@ -9,10 +9,26 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("investments", sa.Column("image_url", sa.String(), nullable=True))
-    op.add_column("updates", sa.Column("image_url", sa.String(), nullable=True))
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+
+    investment_columns = [c["name"] for c in inspector.get_columns("investments")]
+    if "image_url" not in investment_columns:
+        op.add_column("investments", sa.Column("image_url", sa.String(), nullable=True))
+
+    update_columns = [c["name"] for c in inspector.get_columns("updates")]
+    if "image_url" not in update_columns:
+        op.add_column("updates", sa.Column("image_url", sa.String(), nullable=True))
 
 
 def downgrade() -> None:
-    op.drop_column("updates", "image_url")
-    op.drop_column("investments", "image_url")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+
+    update_columns = [c["name"] for c in inspector.get_columns("updates")]
+    if "image_url" in update_columns:
+        op.drop_column("updates", "image_url")
+
+    investment_columns = [c["name"] for c in inspector.get_columns("investments")]
+    if "image_url" in investment_columns:
+        op.drop_column("investments", "image_url")
