@@ -11,6 +11,14 @@ class UpdateCreate(BaseModel):
     image_url: Optional[str] = None
 
 
+class UpdateUpdate(BaseModel):
+    """Schema for updating a property update/news"""
+    property_id: Optional[int] = None
+    title: Optional[str] = Field(None, min_length=3)
+    content: Optional[str] = Field(None, min_length=10)
+    image_url: Optional[str] = None
+
+
 class UpdateResponse(BaseModel):
     """Response schema for update data"""
     id: int

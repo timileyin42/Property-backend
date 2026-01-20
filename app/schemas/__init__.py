@@ -4,8 +4,9 @@ from app.schemas.auth import SignupRequest, LoginRequest, TokenResponse, UserRes
 from app.schemas.user import UserCreate, UserUpdate, UserRoleUpdate, UserListResponse
 from app.schemas.property import PropertyCreate, PropertyUpdate, PropertyResponse, PropertyListResponse
 from app.schemas.investment import InvestmentCreate, InvestmentUpdate, InvestmentResponse, InvestmentDetailResponse, InvestmentListResponse
-from app.schemas.update import UpdateCreate, UpdateResponse, UpdateListResponse
+from app.schemas.update import UpdateCreate, UpdateUpdate, UpdateResponse, UpdateListResponse
 from app.schemas.investment_application import InvestmentApplicationCreate, InvestmentApplicationUpdate, InvestmentApplicationReview, InvestmentApplicationResponse
+from app.schemas.dashboard import DashboardStatsResponse
 
 __all__ = [
     # Auth
@@ -31,6 +32,9 @@ __all__ = [
     "InvestmentListResponse",
     # Update
     "UpdateCreate",
+    "UpdateUpdate",
     "UpdateResponse",
     "UpdateListResponse",
+    # Dashboard
+    "DashboardStatsResponse",
 ]

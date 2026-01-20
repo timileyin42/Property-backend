@@ -15,11 +15,60 @@ from app.schemas.investment import (
     InvestmentResponse,
     InvestmentListResponse,
 )
-from app.schemas.update import UpdateCreate, UpdateResponse
+from app.schemas.update import UpdateCreate, UpdateUpdate, UpdateResponse
 from app.schemas.investment_application import InvestmentApplicationResponse, InvestmentApplicationReview
+from app.schemas.dashboard import DashboardStatsResponse
 from sqlalchemy.sql import func
+from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"], dependencies=[Depends(require_admin)])
+
+
+@router.get("/dashboard-stats", response_model=DashboardStatsResponse)
+def get_dashboard_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Get summary statistics for admin dashboard
+    """
+    # Time deltas
+    now = datetime.utcnow()
+    one_week_ago = now - timedelta(days=7)
+    one_month_ago = now - timedelta(days=30)
+    
+    # 1. Total Interests (Investment Applications)
+    total_interests = db.query(InvestmentApplication).count()
+    interests_this_week = db.query(InvestmentApplication).filter(InvestmentApplication.created_at >= one_week_ago).count()
+    
+    # 2. Active Properties
+    active_properties = db.query(Property).count()
+    fully_subscribed = db.query(Property).filter(Property.fractions_sold >= Property.total_fractions).count()
+    
+    # 3. Total Users
+    total_users = db.query(User).count()
+    users_this_month = db.query(User).filter(User.created_at >= one_month_ago).count()
+    
+    # 4. Total Investment
+    total_investment = db.query(func.sum(Investment.current_value)).scalar() or 0.0
+    # Investment growth (simplified: sum of investments created this month)
+    investment_this_month = db.query(func.sum(Investment.initial_value)).filter(Investment.created_at >= one_month_ago).scalar() or 0.0
+    
+    # Calculate investment growth percentage (approximate)
+    investment_growth_pct = 0
+    if total_investment > 0:
+        investment_growth_pct = (investment_this_month / total_investment) * 100
+    
+    return DashboardStatsResponse(
+        total_interests=total_interests,
+        active_properties=active_properties,
+        total_users=total_users,
+        total_investment=total_investment,
+        interests_growth=f"+{interests_this_week} this week",
+        properties_growth=f"{fully_subscribed} fully subscribed",
+        users_growth=f"+{users_this_month} this month",
+        investment_growth=f"+{round(investment_growth_pct, 1)}% this month"
+    )
 
 
 @router.get("/investments", response_model=InvestmentListResponse)
@@ -301,6 +350,44 @@ def create_update(
     db.refresh(new_update)
     
     return new_update
+
+
+@router.patch("/updates/{update_id}", response_model=UpdateResponse)
+def update_update_news(
+    update_id: int,
+    update_data: UpdateUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Update a property update/news (admin only)
+    """
+    update_item = db.query(Update).filter(Update.id == update_id).first()
+    
+    if not update_item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Update not found"
+        )
+        
+    # Verify property exists if property_id is provided
+    if update_data.property_id is not None:
+        property = db.query(Property).filter(Property.id == update_data.property_id).first()
+        if not property:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Property not found"
+            )
+    
+    # Update fields
+    data = update_data.model_dump(exclude_unset=True)
+    for field, value in data.items():
+        setattr(update_item, field, value)
+    
+    db.commit()
+    db.refresh(update_item)
+    
+    return update_item
 
 
 @router.get("/investment-applications", response_model=list[InvestmentApplicationResponse])
