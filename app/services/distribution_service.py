@@ -8,7 +8,7 @@ from app.models.investment import Investment
 from app.models.distribution import EarningsDistribution, DistributionStatus
 from app.models.property import Property
 from typing import List
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def calculate_and_create_distributions(
@@ -87,7 +87,7 @@ def calculate_and_create_distributions(
     
     # Mark revenue as distributed
     revenue.distributed = True
-    revenue.distribution_date = datetime.utcnow()
+    revenue.distribution_date = datetime.now(timezone.utc)
     
     db.commit()
     

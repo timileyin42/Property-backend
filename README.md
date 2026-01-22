@@ -13,6 +13,7 @@ A production-ready FastAPI backend for a real estate investment platform with ro
 - [Database Schema](#database-schema)
 - [Testing](#testing)
 - [Deployment](#deployment)
+- [Media Upload Guide](#media-upload-guide-frontend)
 
 ---
 
@@ -45,561 +46,167 @@ graph LR
 ```mermaid
 graph TB
     subgraph "Client Layer"
-        A[Web Browser]
-        B[Mobile App]
-    end
-    
-    subgraph "API Layer"
-        C[FastAPI Application]
-        D[CORS Middleware]
-        E[JWT Authentication]
-    end
-    
-    subgraph "Business Logic"
-        F[Auth Service]
-        G[Property Service]
-        H[Investment Service]
-        I[User Service]
-    end
-    
-    subgraph "Data Layer"
-        J[(PostgreSQL Database)]
-    end
-    
-    A --> D
-    B --> D
-    D --> C
-    C --> E
-    E --> F
-    E --> G
-    E --> H
-    E --> I
-    F --> J
-    G --> J
-    H --> J
-    I --> J
-```
+    A[Web Browser]
+    B[Mobile App]
+    A --> C[Load Balancer]
+    B --> C
+end
 
-### Role-Based Access Control
+    subgraph "Backend Layer"
+        C --> D[FastAPI Server]
+        D --> E[PostgreSQL DB]
+        D --> F[Redis Cache]
+    end
 
-```mermaid
-graph TD
-    A[Request] --> B{Authenticated?}
-    B -->|No| C[401 Unauthorized]
-    B -->|Yes| D{Check Role}
-    D -->|PUBLIC/USER| E[Public Endpoints Only]
-    D -->|INVESTOR| F[Investor Endpoints + Public]
-    D -->|ADMIN| G[All Endpoints]
-    E --> H[Properties, Updates]
-    F --> I[My Investments]
-    G --> J[User Management, Property CRUD, Investment Assignment]
-```
-
-### Investment Flow
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant A as Admin
-    participant S as System
-    participant D as Database
-    
-    U->>S: Express Interest
-    Note over U,S: Offline verification
-    A->>S: Login as Admin
-    A->>S: Promote User to INVESTOR
-    S->>D: Update user.role = INVESTOR
-    A->>S: Assign Investment
-    S->>D: Create Investment Record
-    U->>S: Login as Investor
-    U->>S: View My Investments
-    S->>D: Query Investments
-    D->>S: Return Portfolio
-    S->>U: Display Growth & Valuations
+    subgraph "External Services"
+        D --> G[Cloudinary]
+        D --> H[Resend Email]
+    end
 ```
 
 ---
 
-## ✨ Features
+## 🚀 Features
 
-### Public Features
-- ✅ Browse available properties
-- ✅ View property details
-- ✅ Read property updates/news
-- ✅ Express interest form
+### 🔐 Authentication & Roles
+- **JWT Auth**: Secure access with access/refresh tokens
+- **Role-Based Access Control (RBAC)**:
+  - `USER`: Default role, can browse and wishlist
+  - `INVESTOR`: Can view portfolio and financial data
+  - `ADMIN`: Full system control
 
-### Authentication
+### 🏠 Property Management
+- Admin creates and updates property listings
+- Image gallery support (via Cloudinary)
+- Investment status tracking (Available, Sold Out)
 
-- ✅ Email/password signup
-- ✅ **OAuth2 password flow** - FastAPI standard
-- ✅ JWT-based authentication (access + refresh tokens)
-- ✅ Secure password hashing (bcrypt)
-- ✅ **Auto-admin creation** - Admin user created from `.env` on startup
+### 💰 Investment Portfolio
+- **Manual Assignment**: Admin assigns investments to investors (offline payment verification)
+- **Valuation Updates**: Admin updates property values; investors see real-time ROI
+- **Financial Metrics**: Track initial investment, current value, and growth percentage
 
-> **Note**: The login endpoint uses OAuth2 password flow. In the request, use `username` (not `email`) and `password` as form data fields. The `username` field should contain the user's email address.
-
-### Admin Features
-- ✅ User management
-- ✅ Promote users to investors
-- ✅ Create/edit/delete properties
-- ✅ Assign investments to investors
-- ✅ Update property valuations
-- ✅ Post property updates/news
-
-### Investor Features
-- ✅ View investment portfolio
-- ✅ Track growth percentage
-- ✅ View detailed property information
-- ✅ Real-time valuation updates
+### 📰 Updates & News
+- Admin posts property-specific updates or general news
+- Investors get notified of updates for their properties
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Framework**: FastAPI 0.109.0
+- **Framework**: FastAPI (Python 3.10+)
 - **Database**: PostgreSQL 15
-- **Cache/Session**: Redis 7
-- **ORM**: SQLAlchemy 2.0
-- **Migrations**: Alembic 1.13
-- **Authentication**: JWT (python-jose)
-- **Password Hashing**: bcrypt (passlib)
-- **Validation**: Pydantic 2.5
+- **ORM**: SQLAlchemy 2.0 (Async)
+- **Migrations**: Alembic
+- **Caching**: Redis
+- **Authentication**: OAuth2 with Password Flow (JWT)
+- **Validation**: Pydantic v2
+- **Media**: Cloudinary
 - **Email**: Resend
-- **Media Storage**: Cloudinary
-- **Containerization**: Docker & Docker Compose (multi-stage builds)
+- **Containerization**: Docker & Docker Compose
 
 ---
 
-## 🚀 Getting Started
+## 🏁 Getting Started
 
 ### Prerequisites
+- Docker & Docker Compose
+- Python 3.10+ (for local dev)
 
-- Docker Desktop installed
-- Git
-- Python 3.11+ (for local development)
-
-### Important: Admin User Auto-Creation
-
-The application automatically creates an admin user on startup using credentials from the `.env` file. This means:
-
-1. **No manual admin creation needed** - The admin user is created automatically
-2. **Idempotent** - If the admin already exists, it skips creation
-3. **Configurable** - Set admin credentials in `.env` file
-
-### Quick Start with Docker (Recommended)
-
-The application uses Docker Compose to orchestrate three services:
-- **PostgreSQL** - Primary database
-- **Redis** - Caching and session management
-- **FastAPI App** - Main application server
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd Property-backend
-   ```
-
-2. **Create environment file**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` and configure required variables:
-   ```env
-   SECRET_KEY=
-   DATABASE_URL=
-   REDIS_URL=
-   RESEND_API_KEY=
-   CLOUDINARY_CLOUD_NAME=
-   CLOUDINARY_API_KEY=
-   CLOUDINARY_API_SECRET=
-   ```
-
-3. **Start all services**
-   ```bash
-   docker-compose up --build
-   ```
-   
-   This will:
-   - Build the optimized Docker image (multi-stage build)
-   - Start PostgreSQL with health checks
-   - Start Redis with persistence enabled
-   - Run database migrations automatically
-   - Create admin user automatically
-   - Start the FastAPI application
-
-4. **Wait for services to be ready**
-   - Database will initialize and run health checks
-   - Redis will start with authentication
-   - **Migrations will run automatically** (via entrypoint.sh)
-   - Admin user will be created on first startup
-   - API will start on http://localhost:8000
-
-5. **Verify services are healthy**
-   ```bash
-   # Check health endpoint
-   curl http://localhost:8000/health
-   
-   # Should return status for PostgreSQL and Redis
-   ```
-
-6. **Seed the database** (optional - in a new terminal)
-   ```bash
-   docker-compose exec app python seed_data.py
-   ```
-
-7. **Access the API**
-   - API Docs: http://localhost:8000/docs
-   - ReDoc: http://localhost:8000/redoc
-   - Health Check: http://localhost:8000/health
-
-### Docker Commands Reference
-
+### 1. Clone & Configure
 ```bash
-# Start services in background
-docker-compose up -d
-
-# View logs
-docker-compose logs -f app
-
-# Stop services
-docker-compose down
-
-# Stop and remove volumes (WARNING: deletes data)
-docker-compose down -v
-
-# Rebuild after code changes
-docker-compose up --build
-
-# Execute commands in container
-docker-compose exec app alembic upgrade head
-docker-compose exec app python -m pytest
-
-# Access Redis CLI
-docker-compose exec redis redis-cli -a redispass
-
-# Access PostgreSQL
-docker-compose exec db psql -U propertyuser -d propertydb
+git clone <repo-url>
+cd property-backend
+cp .env.example .env
+# Edit .env with your credentials
 ```
 
-### Local Development (without Docker)
-
-1. **Create virtual environment**
-   ```bash
-   python -m venv venv
-   venv\Scripts\activate  # Windows
-   source venv/bin/activate  # Linux/Mac
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Set up PostgreSQL and Redis locally**
-   ```bash
-   # Install PostgreSQL and Redis on your system
-   # Update .env with local connection strings
-   DATABASE_URL=postgresql://user:password@localhost:5432/propertydb
-   REDIS_URL=redis://localhost:6379/0
-   ```
-
-4. **Run migrations**
-   ```bash
-   alembic upgrade head
-   ```
-
-5. **Seed database**
-   ```bash
-   python seed_data.py
-   ```
-
-6. **Start the server**
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-
-### Redis Integration
-
-The application uses Redis for:
-- **Caching** - API response caching for improved performance
-- **Session Management** - User session storage
-- **Rate Limiting** - API rate limiting (future enhancement)
-
-#### Using Redis Cache in Your Code
-
-```python
-from app.utils.redis_client import cache_set, cache_get, cache_delete
-from app.utils.cache import cached, invalidate_cache
-
-# Manual caching
-data = cache_get("my_key")
-if not data:
-    data = expensive_operation()
-    cache_set("my_key", data, ttl=600)  # Cache for 10 minutes
-
-# Using decorator
-@cached(prefix="properties", ttl=300)
-def get_all_properties(db: Session):
-    return db.query(Property).all()
-
-# Invalidate cache after updates
-invalidate_cache("properties:*")
-```
-
-#### Redis Health Check
-
-The `/health` endpoint includes Redis status:
+### 2. Run with Docker (Recommended)
 ```bash
-curl http://localhost:8000/health
+docker-compose up --build -d
 ```
+Access the API at `http://localhost:8000`  
+Docs at `http://localhost:8000/docs`
 
-Response includes Redis connection status, version, and memory usage.
+### 3. Run Locally
+```bash
+# Create venv
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+
+# Install deps
+pip install -r requirements.txt
+
+# Start services (DB/Redis)
+docker-compose up -d db redis
+
+# Run migrations
+alembic upgrade head
+
+# Start app
+uvicorn app.main:app --reload
+```
 
 ---
 
 ## 📚 API Documentation
 
-### Base URL
-```
-http://localhost:8000
-```
+Interactive Swagger documentation is available at `/docs`.
 
-### Authentication Endpoints
+### Key Endpoints
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/auth/signup` | Create new user account | No |
-| POST | `/api/auth/login` | Login and get JWT tokens | No |
-| GET | `/api/auth/me` | Get current user info | Yes |
-| POST | `/api/auth/logout` | Logout (client-side) | Yes |
+| Method | Endpoint | Description | Role |
+|--------|----------|-------------|------|
+| POST | `/api/auth/signup` | Register new user | Public |
+| POST | `/api/auth/login` | Get access token | Public |
+| GET | `/api/properties` | List properties | Public |
+| GET | `/api/investor/portfolio` | Get my investments | Investor |
+| POST | `/api/admin/investments` | Assign investment | Admin |
+| PATCH | `/api/admin/investments/{id}/valuation` | Update value | Admin |
 
-### Public Endpoints
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/api/properties` | List available properties | No |
-| GET | `/api/properties/{id}` | Get property details | No |
-| GET | `/api/updates` | List property updates | No |
-| POST | `/api/contact` | Express interest form | No |
 
-### Admin Endpoints (Requires ADMIN role)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/admin/users` | List all users |
-| PATCH | `/api/admin/users/{id}/role` | Update user role |
-| POST | `/api/admin/properties` | Create property |
-| PATCH | `/api/admin/properties/{id}` | Update property |
-| DELETE | `/api/admin/properties/{id}` | Delete property |
-| POST | `/api/admin/investments` | Assign investment |
-| PATCH | `/api/admin/investments/{id}/valuation` | Update valuation |
-| POST | `/api/admin/updates` | Post property update |
-
-### Investor Endpoints (Requires INVESTOR role)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/investor/investments` | Get my investments |
-| GET | `/api/investor/investments/{id}` | Get investment details |
-
-### Example Requests
-
-#### Signup
-
+---
 
 ## 🗄️ Database Schema
 
-```mermaid
-erDiagram
-    USERS ||--o{ INVESTMENTS : has
-    PROPERTIES ||--o{ INVESTMENTS : receives
-    PROPERTIES ||--o{ UPDATES : has
-    
-    USERS {
-        int id PK
-        string email UK
-        string password_hash
-        string full_name
-        string phone
-        enum role
-        timestamp created_at
-        timestamp updated_at
-    }
-    
-    PROPERTIES {
-        int id PK
-        string title
-        string location
-        text description
-        enum status
-        array image_urls
-        timestamp created_at
-        timestamp updated_at
-    }
-    
-    INVESTMENTS {
-        int id PK
-        int user_id FK
-        int property_id FK
-        float initial_value
-        float current_value
-        timestamp created_at
-        timestamp updated_at
-    }
-    
-    UPDATES {
-        int id PK
-        int property_id FK
-        string title
-        text content
-        timestamp created_at
-        timestamp updated_at
-    }
-```
+### Users
+- `id`: Integer (PK)
+- `email`: String (Unique)
+- `role`: Enum (USER, INVESTOR, ADMIN)
 
-### User Roles
-- `PUBLIC` - Not logged in
-- `USER` - Signed up but not an investor
-- `INVESTOR` - Approved investor
-- `ADMIN` - Internal staff
+### Properties
+- `id`: Integer (PK)
+- `title`: String
+- `status`: Enum (AVAILABLE, SOLD, INVESTED)
+- `image_urls`: Array[String]
 
-### Property Status
-- `AVAILABLE` - Available for investment
-- `SOLD` - Fully sold
-- `INVESTED` - Has active investments
+### Investments
+- `id`: Integer (PK)
+- `user_id`: FK -> Users
+- `property_id`: FK -> Properties
+- `initial_value`: Float (Purchase price)
+- `current_value`: Float (Updated by Admin)
+- `growth_amount`: Computed (Current - Initial)
 
 ---
 
 ## 🧪 Testing
 
-### Run Automated Tests
+Run tests with `pytest`:
 
 ```bash
-# Make sure the application is running
-docker-compose up -d
+# Run all tests
+pytest
 
-# Run the test script
-python test_endpoints.py
+# Run with verbose output
+pytest -v
 ```
 
-### Manual Testing with Swagger UI
-
-1. Navigate to http://localhost:8000/docs
-2. Use the "Authorize" button to add your JWT token
-3. Test endpoints interactively
-
-### OAuth2 Authentication
-
-This API uses **OAuth2 password flow** (FastAPI standard):
-
-- **Login endpoint**: `/api/auth/login`
-- **Token URL**: `/api/auth/login` (used by Swagger UI)
-- **Form fields**: `username` (email) and `password`
-- **Response**: JWT access token and refresh token
-
-**Important**: When calling the login endpoint:
-- Use `application/x-www-form-urlencoded` content type
-- Send `username` (not `email`) and `password` as form data
-- The `username` field should contain the user's email address
-
-This allows seamless integration with:
-- FastAPI's interactive docs (Swagger UI "Authorize" button)
-- OAuth2 client libraries
-- Standard authentication flows
+---
 
 ## 🚢 Deployment
 
-### Docker Deployment
+The app is containerized and ready for deployment on any Docker-compatible host (AWS ECS, DigitalOcean App Platform, Railway, etc.).
 
-1. **Build the image**
-   ```bash
-   docker build -t property-backend:latest .
-   ```
-
-2. **Run with docker-compose**
-   ```bash
-   docker-compose -f docker-compose.yml up -d
-   ```
-
-3. **Run migrations**
-   ```bash
-   docker-compose exec app alembic upgrade head
-   ```
-
-### Environment Variables for Production
-
-
-### Database Migrations
-
-```bash
-# Create a new migration
-alembic revision --autogenerate -m "description"
-
-# Apply migrations
-alembic upgrade head
-
-# Rollback one migration
-alembic downgrade -1
-
-# View migration history
-alembic history
-```
-
-## 📁 Project Structure
-
-```
-Property-backend/
-├── app/
-│   ├── api/                    # API route handlers
-│   │   ├── auth.py            # Authentication routes
-│   │   ├── public.py          # Public routes
-│   │   ├── admin.py           # Admin routes
-│   │   └── investor.py        # Investor routes
-│   ├── core/                   # Core functionality
-│   │   ├── config.py          # Configuration
-│   │   ├── database.py        # Database connection
-│   │   ├── security.py        # JWT & password hashing
-│   │   └── permissions.py     # RBAC
-│   ├── models/                 # SQLAlchemy models
-│   │   ├── user.py
-│   │   ├── property.py
-│   │   ├── investment.py
-│   │   └── update.py
-│   ├── schemas/                # Pydantic schemas
-│   │   ├── auth.py
-│   │   ├── user.py
-│   │   ├── property.py
-│   │   ├── investment.py
-│   │   └── update.py
-│   ├── utils/                  # Utilities
-│   │   ├── hashing.py
-│   │   └── pagination.py
-│   └── main.py                 # FastAPI app
-├── alembic/                    # Database migrations
-│   ├── versions/
-│   └── env.py
-├── Dockerfile
-├── docker-compose.yml
-├── requirements.txt
-├── seed_data.py               # Database seeding
-├── test_endpoints.py          # API testing
-└── README.md
-```
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests
-5. Submit a pull request
-
----
-
-## 📄 License
-
-This project is proprietary and confidential.
-
+1. **Build Image**: `docker build -t property-backend .`
+2. **Run Container**: Pass all `.env` variables to the container.

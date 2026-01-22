@@ -281,7 +281,6 @@ def forgot_password(
         Success message (always returns success for security)
     """
     from app.services.email_service import send_password_reset, generate_otp
-    from datetime import datetime, timedelta
     
     # Find user by email
     user = db.query(User).filter(User.email == request.email).first()
@@ -296,7 +295,7 @@ def forgot_password(
     
     # Generate reset code
     reset_code = generate_otp()
-    reset_expires = datetime.utcnow() + timedelta(minutes=15)  # 15 minutes expiry
+    reset_expires = datetime.now(timezone.utc) + timedelta(minutes=15)  # 15 minutes expiry
     
     # Update user with reset token
     user.password_reset_token = reset_code
@@ -335,7 +334,6 @@ def reset_password(
     Returns:
         Success message
     """
-    from datetime import datetime
     
     # Find user
     user = db.query(User).filter(User.email == request.email).first()
@@ -360,7 +358,7 @@ def reset_password(
         )
     
     # Check expiry
-    if user.password_reset_token_expires and user.password_reset_token_expires < datetime.utcnow():
+    if user.password_reset_token_expires and user.password_reset_token_expires < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Reset code has expired. Please request a new one."

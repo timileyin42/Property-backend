@@ -6,7 +6,7 @@ from app.models.user import User
 from app.models.inquiry import PropertyInquiry, InquiryStatus
 from app.models.property import Property
 from app.schemas.inquiry import InquiryResponse, InquiryUpdate, InquiryListResponse
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/admin/inquiries", tags=["Admin - Inquiries"], dependencies=[Depends(require_admin)])
 
@@ -108,7 +108,7 @@ def update_inquiry(
     
     # Set contacted_at if status changed to CONTACTED
     if inquiry_update.status == InquiryStatus.CONTACTED and not inquiry.contacted_at:
-        inquiry.contacted_at = datetime.utcnow()
+        inquiry.contacted_at = datetime.now(timezone.utc)
     
     db.commit()
     db.refresh(inquiry)

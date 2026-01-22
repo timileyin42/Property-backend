@@ -27,6 +27,7 @@ from app.schemas.distribution import (
     DistributionListResponse
 )
 from app.services.distribution_service import calculate_and_create_distributions
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/admin/shortlet", tags=["Admin - Shortlet Management"], dependencies=[Depends(require_admin)])
 
@@ -347,8 +348,7 @@ def update_distribution_status(
     distribution.status = status_update.status
     
     if status_update.status == DistributionStatus.PAID:
-        from datetime import datetime
-        distribution.paid_date = datetime.utcnow()
+        distribution.paid_date = datetime.now(timezone.utc)
     
     if status_update.payment_reference:
         distribution.payment_reference = status_update.payment_reference

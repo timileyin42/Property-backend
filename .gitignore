@@ -17,7 +17,7 @@ myenv/
 .env
 .env.local
 .env.example
-
+upload.md
 # IDE
 .vscode/
 .idea/

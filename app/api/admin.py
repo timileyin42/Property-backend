@@ -19,7 +19,7 @@ from app.schemas.update import UpdateCreate, UpdateUpdate, UpdateResponse
 from app.schemas.investment_application import InvestmentApplicationResponse, InvestmentApplicationReview
 from app.schemas.dashboard import DashboardStatsResponse
 from sqlalchemy.sql import func
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"], dependencies=[Depends(require_admin)])
 
@@ -33,7 +33,7 @@ def get_dashboard_stats(
     Get summary statistics for admin dashboard
     """
     # Time deltas
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     one_week_ago = now - timedelta(days=7)
     one_month_ago = now - timedelta(days=30)
     
