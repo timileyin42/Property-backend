@@ -51,13 +51,19 @@ def generate_upload_signature(
         upload_params["allowed_formats"] = ",".join(allowed_formats)
     
     # Add resource type specific parameters
+    # Note: resource_type is NOT included in signature when part of the URL
+    # We only add it to params for frontend info, but remove before signing if needed
+    
+    params_to_sign = upload_params.copy()
+    
     if resource_type == "video":
-        upload_params["resource_type"] = "video"
-        upload_params["chunk_size"] = 6000000  # 6MB chunks for large videos
+        # Don't add resource_type to params_to_sign as it's in the URL
+        # Don't add chunk_size to params_to_sign unless frontend explicitly sends it
+        pass
     
     # Generate signature
     signature = cloudinary.utils.api_sign_request(
-        upload_params,
+        params_to_sign,
         settings.CLOUDINARY_API_SECRET
     )
     
@@ -69,7 +75,9 @@ def generate_upload_signature(
         "cloud_name": settings.CLOUDINARY_CLOUD_NAME,
         "folder": upload_params["folder"],
         "upload_url": f"https://api.cloudinary.com/v1_1/{settings.CLOUDINARY_CLOUD_NAME}/{resource_type}/upload",
-        **upload_params
+        **upload_params,
+        # Add video specific params back to response for frontend to use if needed
+        **({"resource_type": "video", "chunk_size": 6000000} if resource_type == "video" else {})
     }
 
 
