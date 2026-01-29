@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.startup import startup_tasks
 from app.api import auth, public, admin, investor, media, user
-from app.api import shortlet, investor_shortlet, inquiries
+from app.api import shortlet, investor_shortlet, inquiries, interests, contact
 import logging
 import time
 
@@ -74,6 +74,8 @@ app.include_router(media.router)
 app.include_router(shortlet.router)
 app.include_router(investor_shortlet.router)
 app.include_router(inquiries.router)
+app.include_router(interests.router)
+app.include_router(contact.router)
 
 
 @app.get("/")

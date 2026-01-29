@@ -47,13 +47,13 @@ def update_my_profile(
     return current_user
 
 
-@router.get("/inquiries", response_model=InquiryListResponse)
-def get_my_inquiries(
+@router.get("/interests", response_model=InquiryListResponse)
+def get_my_interests(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Get all inquiries submitted by the current user
+    Get all interests submitted by the current user
     
     Shows history and status updates
     """
@@ -83,15 +83,15 @@ def get_my_inquiries(
     )
 
 
-@router.post("/inquiries", response_model=InquiryResponse, status_code=status.HTTP_201_CREATED)
-def submit_authenticated_inquiry(
+@router.post("/interests", response_model=InquiryResponse, status_code=status.HTTP_201_CREATED)
+def submit_interest(
     property_id: int = Body(...),
     message: str = Body(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Submit an inquiry as authenticated user
+    Express interest in a property (Authenticated User)
     
     Automatically links to user account and uses profile information
     """

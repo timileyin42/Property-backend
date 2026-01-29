@@ -4,7 +4,6 @@ from app.core.database import get_db
 from app.core.permissions import require_admin
 from app.models.user import User
 from app.models.inquiry import PropertyInquiry, InquiryStatus
-from app.models.property import Property
 from app.schemas.inquiry import InquiryResponse, InquiryUpdate, InquiryListResponse
 from datetime import datetime, timezone
 
@@ -20,11 +19,12 @@ def get_all_inquiries(
     db: Session = Depends(get_db)
 ):
     """
-    Get all property inquiries (Admin only)
+    Get all property inquiries (Unauthenticated Users) (Admin only)
     
     Filter by status and paginate results.
     """
-    query = db.query(PropertyInquiry)
+    # Filter for unauthenticated users (user_id IS NULL)
+    query = db.query(PropertyInquiry).filter(PropertyInquiry.user_id.is_(None))
     
     # Filter by status if specified
     if status_filter:
@@ -33,10 +33,11 @@ def get_all_inquiries(
     # Get total count
     total = query.count()
     
-    # Get counts by status
-    new_count = db.query(PropertyInquiry).filter(PropertyInquiry.status == InquiryStatus.NEW).count()
-    contacted_count = db.query(PropertyInquiry).filter(PropertyInquiry.status == InquiryStatus.CONTACTED).count()
-    closed_count = db.query(PropertyInquiry).filter(PropertyInquiry.status == InquiryStatus.CLOSED).count()
+    # Get counts by status (scoped to unauthenticated users)
+    base_count_query = db.query(PropertyInquiry).filter(PropertyInquiry.user_id.is_(None))
+    new_count = base_count_query.filter(PropertyInquiry.status == InquiryStatus.NEW).count()
+    contacted_count = base_count_query.filter(PropertyInquiry.status == InquiryStatus.CONTACTED).count()
+    closed_count = base_count_query.filter(PropertyInquiry.status == InquiryStatus.CLOSED).count()
     
     # Get inquiries
     inquiries = query.order_by(PropertyInquiry.created_at.desc()).offset(skip).limit(limit).all()
@@ -66,7 +67,10 @@ def get_inquiry(
     """
     Get specific inquiry details (Admin only)
     """
-    inquiry = db.query(PropertyInquiry).filter(PropertyInquiry.id == inquiry_id).first()
+    inquiry = db.query(PropertyInquiry).filter(
+        PropertyInquiry.id == inquiry_id,
+        PropertyInquiry.user_id.is_(None)
+    ).first()
     
     if not inquiry:
         raise HTTPException(
@@ -93,7 +97,10 @@ def update_inquiry(
     """
     Update inquiry status and details (Admin only)
     """
-    inquiry = db.query(PropertyInquiry).filter(PropertyInquiry.id == inquiry_id).first()
+    inquiry = db.query(PropertyInquiry).filter(
+        PropertyInquiry.id == inquiry_id,
+        PropertyInquiry.user_id.is_(None)
+    ).first()
     
     if not inquiry:
         raise HTTPException(
@@ -131,7 +138,10 @@ def delete_inquiry(
     """
     Delete an inquiry (Admin only)
     """
-    inquiry = db.query(PropertyInquiry).filter(PropertyInquiry.id == inquiry_id).first()
+    inquiry = db.query(PropertyInquiry).filter(
+        PropertyInquiry.id == inquiry_id,
+        PropertyInquiry.user_id.is_(None)
+    ).first()
     
     if not inquiry:
         raise HTTPException(
