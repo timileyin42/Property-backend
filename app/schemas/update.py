@@ -9,6 +9,7 @@ class UpdateCreate(BaseModel):
     title: str = Field(..., min_length=3)
     content: str = Field(..., min_length=10)
     image_url: Optional[str] = None
+    video_url: Optional[str] = None
 
 
 class UpdateUpdate(BaseModel):
@@ -17,6 +18,7 @@ class UpdateUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=3)
     content: Optional[str] = Field(None, min_length=10)
     image_url: Optional[str] = None
+    video_url: Optional[str] = None
 
 
 class UpdateResponse(BaseModel):
@@ -26,6 +28,7 @@ class UpdateResponse(BaseModel):
     title: str
     content: str
     image_url: Optional[str] = None
+    video_url: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     
