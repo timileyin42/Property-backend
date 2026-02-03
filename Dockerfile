@@ -1,7 +1,7 @@
 # Multi-stage build for optimized production image
 
 # Stage 1: Builder
-FROM python:3.11-slim as builder
+FROM python:3.11-slim-bookworm-bookworm as builder
 
 # Set working directory
 WORKDIR /app
@@ -11,10 +11,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_DEFAULT_TIMEOUT=100
 
 # Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Added retries and mirrors to handle network flakiness
+RUN echo "Acquire::Retries 3;" > /etc/apt/apt.conf.d/80-retries && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
     gcc \
     g++ \
     libpq-dev \
@@ -26,7 +30,7 @@ RUN pip install --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Runtime
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
 # Set working directory
 WORKDIR /app
@@ -37,7 +41,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DEBIAN_FRONTEND=noninteractive
 
 # Install runtime dependencies only
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN echo "Acquire::Retries 3;" > /etc/apt/apt.conf.d/80-retries && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
     postgresql-client \
     redis-tools \
     curl \
@@ -55,6 +61,7 @@ COPY --chown=appuser:appuser . .
 
 # Copy and set permissions for entrypoint script
 COPY --chown=appuser:appuser entrypoint.sh /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Create necessary directories and set permissions
