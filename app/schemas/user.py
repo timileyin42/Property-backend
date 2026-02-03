@@ -23,6 +23,14 @@ class UserRoleUpdate(BaseModel):
     role: UserRole
 
 
+class UserAdminUpdate(BaseModel):
+    """Schema for updating user details (admin only)"""
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    is_active: Optional[bool] = None
+    email: Optional[EmailStr] = None
+
+
 class UserResponse(BaseModel):
     """Response schema for user data"""
     id: int
@@ -30,6 +38,7 @@ class UserResponse(BaseModel):
     full_name: str
     phone: Optional[str]
     role: UserRole
+    is_active: bool
     created_at: datetime
     updated_at: datetime
     

@@ -24,6 +24,7 @@ class User(Base):
     full_name = Column(String, nullable=False)
     phone = Column(String, nullable=True)
     role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
     
     # Email verification
     is_verified = Column(Boolean, default=False, nullable=False)

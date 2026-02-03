@@ -18,6 +18,7 @@ myenv/
 .env.local
 .env.example
 upload.md
+prompt.md
 # IDE
 .vscode/
 .idea/

@@ -7,7 +7,7 @@ from app.models.property import Property
 from app.models.investment import Investment
 from app.models.update import Update
 from app.models.investment_application import InvestmentApplication, ApplicationStatus
-from app.schemas.user import UserListResponse, UserRoleUpdate, UserResponse
+from app.schemas.user import UserListResponse, UserRoleUpdate, UserResponse, UserAdminUpdate
 from app.schemas.property import PropertyCreate, PropertyUpdate, PropertyResponse
 from app.schemas.investment import (
     InvestmentCreate,
@@ -153,6 +153,88 @@ def get_all_users(
         page=page,
         page_size=page_size
     )
+
+
+@router.get("/users/{user_id}", response_model=UserResponse)
+def get_user_details(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Get specific user details (admin only)
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    return user
+
+
+@router.patch("/users/{user_id}", response_model=UserResponse)
+def update_user_details(
+    user_id: int,
+    user_update: UserAdminUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Update user details (admin only)
+    
+    Can update name, phone, email, and active status.
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Update fields
+    update_data = user_update.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(user, field, value)
+    
+    db.commit()
+    db.refresh(user)
+    
+    return user
+
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Delete a user (admin only)
+    
+    Warning: This will cascade delete their investments, inquiries, etc.
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+        
+    if user.id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete yourself"
+        )
+    
+    db.delete(user)
+    db.commit()
+    
+    return None
 
 
 @router.patch("/users/{user_id}/role", response_model=UserResponse)
