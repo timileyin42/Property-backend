@@ -5,7 +5,7 @@ from app.core.permissions import require_admin
 from app.models.user import User, UserRole
 from app.models.property import Property
 from app.models.investment import Investment
-from app.models.update import Update, UpdateComment
+from app.models.update import Update, UpdateComment, UpdateMedia
 from app.models.investment_application import InvestmentApplication, ApplicationStatus
 from app.schemas.user import UserListResponse, UserRoleUpdate, UserResponse, UserAdminUpdate
 from app.schemas.property import PropertyCreate, PropertyUpdate, PropertyResponse, PropertyListResponse
@@ -459,9 +459,25 @@ def create_update(
                 detail="Property not found"
             )
     
-    new_update = Update(**update_data.model_dump())
+    # Extract media_files if present
+    update_dict = update_data.model_dump()
+    media_files_list = update_dict.pop('media_files', None)
+    
+    new_update = Update(**update_dict)
     
     db.add(new_update)
+    db.flush()  # Generate ID
+    
+    # Add media files if provided
+    if media_files_list:
+        for media in media_files_list:
+            new_media = UpdateMedia(
+                update_id=new_update.id,
+                media_type=media['media_type'],
+                url=media['url']
+            )
+            db.add(new_media)
+    
     db.commit()
     db.refresh(new_update)
     
@@ -497,8 +513,24 @@ def update_update_news(
     
     # Update fields
     data = update_data.model_dump(exclude_unset=True)
+    media_files_list = data.pop('media_files', None)
+    
     for field, value in data.items():
         setattr(update_item, field, value)
+    
+    # Update media files if provided
+    if media_files_list is not None:
+        # Remove existing media
+        db.query(UpdateMedia).filter(UpdateMedia.update_id == update_id).delete()
+        
+        # Add new media
+        for media in media_files_list:
+            new_media = UpdateMedia(
+                update_id=update_id,
+                media_type=media['media_type'],
+                url=media['url']
+            )
+            db.add(new_media)
     
     db.commit()
     db.refresh(update_item)

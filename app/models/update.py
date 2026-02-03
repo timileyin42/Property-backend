@@ -24,9 +24,25 @@ class Update(Base):
     related_property = relationship("Property", back_populates="updates")
     comments = relationship("UpdateComment", back_populates="update", cascade="all, delete-orphan")
     likes = relationship("UpdateLike", back_populates="update", cascade="all, delete-orphan")
+    media_files = relationship("UpdateMedia", back_populates="update", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Update(id={self.id}, title={self.title})>"
+
+
+class UpdateMedia(Base):
+    """Model for media files (images/videos) attached to updates"""
+    __tablename__ = "update_media"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    update_id = Column(Integer, ForeignKey("updates.id", ondelete="CASCADE"), nullable=False)
+    media_type = Column(String, nullable=False)  # 'image' or 'video'
+    url = Column(String, nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    
+    # Relationships
+    update = relationship("Update", back_populates="media_files")
 
 
 class UpdateComment(Base):

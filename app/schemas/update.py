@@ -1,6 +1,15 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
+
+
+class MediaItem(BaseModel):
+    """Schema for media items (images/videos)"""
+    media_type: str
+    url: str
+    
+    class Config:
+        from_attributes = True
 
 
 class UpdateCreate(BaseModel):
@@ -10,6 +19,7 @@ class UpdateCreate(BaseModel):
     content: str = Field(..., min_length=10)
     image_url: Optional[str] = None
     video_url: Optional[str] = None
+    media_files: Optional[List[MediaItem]] = None
 
 
 class UpdateUpdate(BaseModel):
@@ -19,6 +29,7 @@ class UpdateUpdate(BaseModel):
     content: Optional[str] = Field(None, min_length=10)
     image_url: Optional[str] = None
     video_url: Optional[str] = None
+    media_files: Optional[List[MediaItem]] = None
 
 
 class UpdateResponse(BaseModel):
@@ -29,6 +40,7 @@ class UpdateResponse(BaseModel):
     content: str
     image_url: Optional[str] = None
     video_url: Optional[str] = None
+    media_files: List[MediaItem] = []
     created_at: datetime
     updated_at: datetime
     
