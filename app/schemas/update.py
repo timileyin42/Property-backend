@@ -32,8 +32,41 @@ class UpdateResponse(BaseModel):
     # Optional property info
     property_title: Optional[str] = None
     
+    # Social stats
+    likes_count: int = 0
+    comments_count: int = 0
+    is_liked_by_user: bool = False  # For authenticated requests
+    
     class Config:
         from_attributes = True
+
+
+class UpdateCommentCreate(BaseModel):
+    """Schema for creating a comment"""
+    content: str = Field(..., min_length=1)
+
+
+class UpdateCommentResponse(BaseModel):
+    """Schema for comment response"""
+    id: int
+    update_id: int
+    user_id: int
+    user_name: str
+    user_avatar: Optional[str] = None  # If we have avatars later
+    content: str
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class CommentListResponse(BaseModel):
+    """Paginated comments"""
+    comments: list[UpdateCommentResponse]
+    total: int
+    page: int
+    page_size: int
 
 
 class UpdateListResponse(BaseModel):

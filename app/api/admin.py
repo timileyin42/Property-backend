@@ -5,7 +5,7 @@ from app.core.permissions import require_admin
 from app.models.user import User, UserRole
 from app.models.property import Property
 from app.models.investment import Investment
-from app.models.update import Update
+from app.models.update import Update, UpdateComment
 from app.models.investment_application import InvestmentApplication, ApplicationStatus
 from app.schemas.user import UserListResponse, UserRoleUpdate, UserResponse, UserAdminUpdate
 from app.schemas.property import PropertyCreate, PropertyUpdate, PropertyResponse, PropertyListResponse
@@ -15,7 +15,7 @@ from app.schemas.investment import (
     InvestmentResponse,
     InvestmentListResponse,
 )
-from app.schemas.update import UpdateCreate, UpdateUpdate, UpdateResponse
+from app.schemas.update import UpdateCreate, UpdateUpdate, UpdateResponse, CommentListResponse
 from app.schemas.investment_application import InvestmentApplicationResponse, InvestmentApplicationReview
 from app.schemas.dashboard import DashboardStatsResponse
 from sqlalchemy.sql import func
@@ -504,6 +504,68 @@ def update_update_news(
     db.refresh(update_item)
     
     return update_item
+
+
+@router.get("/updates/{update_id}/comments", response_model=CommentListResponse)
+def get_update_comments(
+    update_id: int,
+    page: int = 1,
+    page_size: int = 20,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Get all comments for an update (Admin View)
+    """
+    # Verify update exists
+    update = db.query(Update).filter(Update.id == update_id).first()
+    if not update:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Update not found"
+        )
+        
+    query = db.query(UpdateComment).filter(UpdateComment.update_id == update_id)
+    total = query.count()
+    
+    skip = (page - 1) * page_size
+    comments = query.order_by(UpdateComment.created_at.desc()).offset(skip).limit(page_size).all()
+    
+    # Enrich comments with user info
+    for comment in comments:
+        if comment.user:
+            comment.user_name = comment.user.full_name or "User"
+            # comment.user_avatar = comment.user.avatar_url 
+    
+    return CommentListResponse(
+        comments=comments,
+        total=total,
+        page=page,
+        page_size=page_size
+    )
+
+
+@router.delete("/updates/comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_comment(
+    comment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Delete any comment (Admin only)
+    """
+    comment = db.query(UpdateComment).filter(UpdateComment.id == comment_id).first()
+    
+    if not comment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Comment not found"
+        )
+    
+    db.delete(comment)
+    db.commit()
+    
+    return None
 
 
 @router.get("/investment-applications", response_model=list[InvestmentApplicationResponse])

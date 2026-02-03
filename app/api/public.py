@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.core.database import get_db
+from app.core.permissions import get_current_user_optional
+from app.models.user import User
 from app.models.property import Property, PropertyStatus
-from app.models.update import Update
+from app.models.update import Update, UpdateComment, UpdateLike
 from app.schemas.property import PropertyResponse, PropertyListResponse
-from app.schemas.update import UpdateResponse, UpdateListResponse
+from app.schemas.update import UpdateResponse, UpdateListResponse, CommentListResponse, UpdateCommentResponse
 
 router = APIRouter(prefix="/api", tags=["Public"])
 
@@ -72,6 +74,7 @@ def get_updates(
     page: int = 1,
     page_size: int = 10,
     property_id: Optional[int] = None,
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     """
@@ -93,15 +96,67 @@ def get_updates(
     skip = (page - 1) * page_size
     updates = query.order_by(Update.created_at.desc()).offset(skip).limit(page_size).all()
     
-    # Enrich with property titles
+    # Enrich with property titles and social stats
     for update in updates:
         if update.property_id:
             property = db.query(Property).filter(Property.id == update.property_id).first()
             if property:
                 update.property_title = property.title
+        
+        # Count likes and comments
+        update.likes_count = db.query(UpdateLike).filter(UpdateLike.update_id == update.id).count()
+        update.comments_count = db.query(UpdateComment).filter(UpdateComment.update_id == update.id).count()
+        
+        # Check if liked by current user
+        if current_user:
+            is_liked = db.query(UpdateLike).filter(
+                UpdateLike.update_id == update.id,
+                UpdateLike.user_id == current_user.id
+            ).first()
+            update.is_liked_by_user = bool(is_liked)
+        else:
+            update.is_liked_by_user = False
     
     return UpdateListResponse(
         updates=updates,
+        total=total,
+        page=page,
+        page_size=page_size
+    )
+
+
+@router.get("/updates/{update_id}/comments", response_model=CommentListResponse)
+def get_public_update_comments(
+    update_id: int,
+    page: int = 1,
+    page_size: int = 20,
+    db: Session = Depends(get_db)
+):
+    """
+    Get comments for an update (Public)
+    """
+    # Verify update exists
+    update = db.query(Update).filter(Update.id == update_id).first()
+    if not update:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Update not found"
+        )
+        
+    query = db.query(UpdateComment).filter(UpdateComment.update_id == update_id)
+    total = query.count()
+    
+    skip = (page - 1) * page_size
+    comments = query.order_by(UpdateComment.created_at.desc()).offset(skip).limit(page_size).all()
+    
+    # Enrich comments with user info
+    for comment in comments:
+        if comment.user:
+            comment.user_name = comment.user.full_name or "User"
+            # comment.user_avatar = comment.user.avatar_url 
+    
+    return CommentListResponse(
+        comments=comments,
         total=total,
         page=page,
         page_size=page_size

@@ -8,6 +8,7 @@ from app.models.user import User, UserRole
 
 # OAuth2 password bearer scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
 def get_current_user(
@@ -62,6 +63,32 @@ def get_current_user(
         )
     
     return user
+
+
+def get_current_user_optional(
+    token: Optional[str] = Depends(oauth2_scheme_optional),
+    db: Session = Depends(get_db)
+) -> Optional[User]:
+    """
+    Get current user if token exists, otherwise return None
+    """
+    if not token:
+        return None
+        
+    try:
+        payload = decode_token(token)
+        if not payload:
+            return None
+            
+        raw_user_id = payload.get("sub")
+        if not raw_user_id:
+            return None
+            
+        user_id = int(raw_user_id)
+        user = db.query(User).filter(User.id == user_id).first()
+        return user
+    except Exception:
+        return None
 
 
 def require_role(required_role: UserRole):

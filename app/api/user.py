@@ -7,10 +7,12 @@ from app.models.property import Property
 from app.models.inquiry import PropertyInquiry, InquiryStatus
 from app.models.wishlist import Wishlist
 from app.models.investment_application import InvestmentApplication, ApplicationStatus
+from app.models.update import Update, UpdateComment, UpdateLike
 from app.schemas.user import ProfileUpdate, UserResponse
 from app.schemas.inquiry import InquiryResponse, InquiryListResponse
 from app.schemas.wishlist import WishlistCreate, WishlistUpdate, WishlistResponse, WishlistListResponse
 from app.schemas.investment_application import InvestmentApplicationCreate, InvestmentApplicationUpdate, InvestmentApplicationResponse
+from app.schemas.update import UpdateCommentCreate, UpdateCommentResponse, CommentListResponse
 import logging
 
 logger = logging.getLogger(__name__)
@@ -402,3 +404,144 @@ def update_my_application(
     db.refresh(application)
     
     return application
+
+
+@router.post("/updates/{update_id}/comments", response_model=UpdateCommentResponse, status_code=status.HTTP_201_CREATED)
+def create_update_comment(
+    update_id: int,
+    comment_data: UpdateCommentCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Add a comment to an update
+    """
+    # Verify update exists
+    update = db.query(Update).filter(Update.id == update_id).first()
+    if not update:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Update not found"
+        )
+    
+    # Create comment
+    comment = UpdateComment(
+        update_id=update_id,
+        user_id=current_user.id,
+        content=comment_data.content
+    )
+    
+    db.add(comment)
+    db.commit()
+    db.refresh(comment)
+    
+    # Enrich response
+    comment.user_name = current_user.full_name or "User"
+    comment.user_avatar = None  # Placeholder
+    
+    return comment
+
+
+@router.get("/updates/{update_id}/comments", response_model=CommentListResponse)
+def get_update_comments(
+    update_id: int,
+    page: int = 1,
+    page_size: int = 20,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get comments for an update
+    """
+    # Verify update exists
+    update = db.query(Update).filter(Update.id == update_id).first()
+    if not update:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Update not found"
+        )
+        
+    query = db.query(UpdateComment).filter(UpdateComment.update_id == update_id)
+    total = query.count()
+    
+    skip = (page - 1) * page_size
+    comments = query.order_by(UpdateComment.created_at.desc()).offset(skip).limit(page_size).all()
+    
+    # Enrich comments with user info
+    for comment in comments:
+        if comment.user:
+            comment.user_name = comment.user.full_name or "User"
+            # comment.user_avatar = comment.user.avatar_url 
+    
+    return CommentListResponse(
+        comments=comments,
+        total=total,
+        page=page,
+        page_size=page_size
+    )
+
+
+@router.delete("/updates/comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_update_comment(
+    comment_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a comment (User can only delete their own)
+    """
+    comment = db.query(UpdateComment).filter(
+        UpdateComment.id == comment_id,
+        UpdateComment.user_id == current_user.id
+    ).first()
+    
+    if not comment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Comment not found or not owned by user"
+        )
+    
+    db.delete(comment)
+    db.commit()
+    
+    return None
+
+
+@router.post("/updates/{update_id}/like", status_code=status.HTTP_200_OK)
+def toggle_update_like(
+    update_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Toggle like on an update
+    Returns {"liked": bool}
+    """
+    # Verify update exists
+    update = db.query(Update).filter(Update.id == update_id).first()
+    if not update:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Update not found"
+        )
+    
+    # Check if already liked
+    existing_like = db.query(UpdateLike).filter(
+        UpdateLike.update_id == update_id,
+        UpdateLike.user_id == current_user.id
+    ).first()
+    
+    if existing_like:
+        # Unlike
+        db.delete(existing_like)
+        db.commit()
+        return {"liked": False}
+    else:
+        # Like
+        new_like = UpdateLike(
+            update_id=update_id,
+            user_id=current_user.id
+        )
+        db.add(new_like)
+        db.commit()
+        return {"liked": True}
