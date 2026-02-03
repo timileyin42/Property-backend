@@ -37,6 +37,10 @@ class UserResponse(BaseModel):
     email: str
     full_name: str
     phone: Optional[str]
+    gender: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
     role: UserRole
     is_active: bool
     created_at: datetime
@@ -58,6 +62,10 @@ class ProfileUpdate(BaseModel):
     """Schema for user profile update"""
     full_name: Optional[str] = None
     phone: Optional[str] = None
+    gender: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
 
 
 class NotificationPreferences(BaseModel):

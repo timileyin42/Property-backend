@@ -37,11 +37,10 @@ def update_my_profile(
     """
     Update current user's profile information
     """
-    if profile_update.full_name is not None:
-        current_user.full_name = profile_update.full_name
+    update_data = profile_update.model_dump(exclude_unset=True)
     
-    if profile_update.phone is not None:
-        current_user.phone = profile_update.phone
+    for field, value in update_data.items():
+        setattr(current_user, field, value)
     
     db.commit()
     db.refresh(current_user)
