@@ -1,7 +1,7 @@
 # Multi-stage build for optimized production image
 
 # Stage 1: Builder
-FROM python:3.11-slim-bookworm-bookworm as builder
+FROM python:3.11-slim-bookworm as builder
 
 # Set working directory
 WORKDIR /app
