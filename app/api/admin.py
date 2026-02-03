@@ -7,6 +7,7 @@ from app.models.property import Property
 from app.models.investment import Investment
 from app.models.update import Update, UpdateComment, UpdateMedia
 from app.models.investment_application import InvestmentApplication, ApplicationStatus
+from app.models.inquiry import PropertyInquiry
 from app.schemas.user import UserListResponse, UserRoleUpdate, UserResponse, UserAdminUpdate
 from app.schemas.property import PropertyCreate, PropertyUpdate, PropertyResponse, PropertyListResponse
 from app.schemas.investment import (
@@ -37,9 +38,18 @@ def get_dashboard_stats(
     one_week_ago = now - timedelta(days=7)
     one_month_ago = now - timedelta(days=30)
     
-    # 1. Total Interests (Investment Applications)
-    total_interests = db.query(InvestmentApplication).count()
-    interests_this_week = db.query(InvestmentApplication).filter(InvestmentApplication.created_at >= one_week_ago).count()
+    # 1. Total Interests (Investment Applications + Property Inquiries)
+    # Count Investment Applications
+    total_applications = db.query(InvestmentApplication).count()
+    applications_this_week = db.query(InvestmentApplication).filter(InvestmentApplication.created_at >= one_week_ago).count()
+    
+    # Count Property Inquiries
+    total_inquiries = db.query(PropertyInquiry).count()
+    inquiries_this_week = db.query(PropertyInquiry).filter(PropertyInquiry.created_at >= one_week_ago).count()
+    
+    # Combine
+    total_interests = total_applications + total_inquiries
+    interests_this_week = applications_this_week + inquiries_this_week
     
     # 2. Active Properties
     active_properties = db.query(Property).count()
