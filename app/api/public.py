@@ -125,6 +125,46 @@ def get_updates(
     )
 
 
+@router.get("/updates/{update_id}", response_model=UpdateResponse)
+def get_update(
+    update_id: int,
+    current_user: Optional[User] = Depends(get_current_user_optional),
+    db: Session = Depends(get_db)
+):
+    """
+    Get detailed information about a specific update
+    """
+    update = db.query(Update).filter(Update.id == update_id).first()
+    
+    if not update:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Update not found"
+        )
+    
+    # Enrich with property title if exists
+    if update.property_id:
+        property = db.query(Property).filter(Property.id == update.property_id).first()
+        if property:
+            update.property_title = property.title
+    
+    # Count likes and comments
+    update.likes_count = db.query(UpdateLike).filter(UpdateLike.update_id == update.id).count()
+    update.comments_count = db.query(UpdateComment).filter(UpdateComment.update_id == update.id).count()
+    
+    # Check if liked by current user
+    if current_user:
+        is_liked = db.query(UpdateLike).filter(
+            UpdateLike.update_id == update.id,
+            UpdateLike.user_id == current_user.id
+        ).first()
+        update.is_liked_by_user = bool(is_liked)
+    else:
+        update.is_liked_by_user = False
+        
+    return update
+
+
 @router.get("/updates/{update_id}/comments", response_model=CommentListResponse)
 def get_public_update_comments(
     update_id: int,
