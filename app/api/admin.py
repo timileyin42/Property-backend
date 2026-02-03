@@ -8,7 +8,7 @@ from app.models.investment import Investment
 from app.models.update import Update
 from app.models.investment_application import InvestmentApplication, ApplicationStatus
 from app.schemas.user import UserListResponse, UserRoleUpdate, UserResponse, UserAdminUpdate
-from app.schemas.property import PropertyCreate, PropertyUpdate, PropertyResponse
+from app.schemas.property import PropertyCreate, PropertyUpdate, PropertyResponse, PropertyListResponse
 from app.schemas.investment import (
     InvestmentCreate,
     InvestmentUpdate,
@@ -263,6 +263,40 @@ def update_user_role(
     db.refresh(user)
     
     return user
+
+
+
+@router.get("/properties", response_model=PropertyListResponse)
+def list_properties(
+    page: int = 1,
+    page_size: int = 20,
+    status: str = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    List all properties with pagination (admin only)
+    
+    Can optionally filter by status (AVAILABLE, SOLD, etc.)
+    """
+    from app.schemas.property import PropertyListResponse
+    
+    query = db.query(Property)
+    
+    # Optional status filter
+    if status:
+        query = query.filter(Property.status == status)
+        
+    total = query.count()
+    skip = (page - 1) * page_size
+    properties = query.order_by(Property.created_at.desc()).offset(skip).limit(page_size).all()
+    
+    return PropertyListResponse(
+        properties=properties,
+        total=total,
+        page=page,
+        page_size=page_size
+    )
 
 
 @router.post("/properties", response_model=PropertyResponse, status_code=status.HTTP_201_CREATED)
