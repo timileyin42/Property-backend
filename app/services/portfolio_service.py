@@ -52,11 +52,15 @@ def create_portfolio_snapshot(user_id: int, db: Session, snapshot_date: date = N
     growth_percentage = (growth_amount / total_initial * 100) if total_initial > 0 else 0.0
     
     # Get total earnings received up to this date
+    # Join through investment to get user's earnings
     total_earnings = db.query(
-        func.sum(EarningsDistribution.amount)
+        func.sum(EarningsDistribution.earnings_amount)
+    ).join(
+        Investment, Investment.id == EarningsDistribution.investment_id
     ).filter(
-        EarningsDistribution.user_id == user_id,
-        EarningsDistribution.distribution_date <= snapshot_date
+        Investment.user_id == user_id,
+        EarningsDistribution.paid_date <= snapshot_date,
+        EarningsDistribution.status == "PAID"
     ).scalar() or 0.0
     
     # Create snapshot
