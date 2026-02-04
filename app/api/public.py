@@ -49,6 +49,61 @@ def get_properties(
         page_size=page_size
     )
 
+@router.get("/properties/search", response_model=PropertyListResponse)
+def search_properties(
+    location: Optional[str] = None,
+    bedrooms: Optional[int] = None,
+    status: Optional[PropertyStatus] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    page: int = 1,
+    page_size: int = 10,
+    db: Session = Depends(get_db)
+):
+    """
+    Search properties (public)
+    Supports filtering by:
+    - location (substring match)
+    - bedrooms (exact count)
+    - status (AVAILABLE, SOLD, INVESTED)
+    - price range (fraction_price)
+    """
+    query = db.query(Property)
+    
+    # Apply filters
+    if location:
+        query = query.filter(Property.location.ilike(f"%{location}%"))
+    
+    if bedrooms is not None:
+        query = query.filter(Property.bedrooms == bedrooms)
+    
+    if status:
+        query = query.filter(Property.status == status)
+    
+    if min_price is not None:
+        query = query.filter(Property.fraction_price >= min_price)
+    
+    if max_price is not None:
+        query = query.filter(Property.fraction_price <= max_price)
+    
+    # Get total after filters
+    total = query.count()
+    
+    # Pagination
+    skip = (page - 1) * page_size
+    properties = query.order_by(Property.created_at.desc()).offset(skip).limit(page_size).all()
+    
+    # Enrich with primary image URL
+    for property in properties:
+        property.primary_image = property.image_urls[0] if property.image_urls else None
+    
+    return PropertyListResponse(
+        properties=properties,
+        total=total,
+        page=page,
+        page_size=page_size
+    )
+
 
 @router.get("/properties/{property_id}", response_model=PropertyResponse)
 def get_property(property_id: int, db: Session = Depends(get_db)):
