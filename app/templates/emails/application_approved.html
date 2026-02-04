@@ -3,208 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Application Approved - Welcome Investor!</title>
+    <title>Application Approved - Welcome Investor</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
-            max-width: 600px;
+            color: #4a5565;
+            background: #f3f4f6;
+            margin: 0;
+            padding: 24px;
+        }
+        .email-container {
+            max-width: 680px;
             margin: 0 auto;
-            padding: 20px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
         }
         .header {
-            background: #143C86;
-            color: white;
-            padding: 40px 24px 32px;
-            border-radius: 10px 10px 0 0;
+            background: #1e3a8a;
+            color: #ffffff;
+            padding: 36px 28px 28px;
             text-align: center;
         }
-        .brand-badge {
+        .brand {
             display: inline-flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            margin-bottom: 18px;
-        }
-        .brand-logo {
-            width: 56px;
-            height: 56px;
-            border-radius: 18px;
-            background: #ffffff;
-            display: flex;
-            align-items: center;
+            gap: 10px;
             justify-content: center;
             margin-bottom: 12px;
         }
-        .brand-logo-mark {
-            display: inline-block;
-            padding: 6px;
-            border-radius: 6px;
-            border: 2px solid #143C86;
+        .brand-mark {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
-        .brand-logo-bar {
-            display: inline-block;
-            width: 6px;
-            height: 18px;
-            background: #143C86;
-            margin: 0 2px;
-            vertical-align: bottom;
+        .brand-logo-img {
+            width: 24px;
+            height: 24px;
+            display: block;
         }
         .brand-name {
             font-size: 20px;
             font-weight: 600;
-            letter-spacing: 0.02em;
+            letter-spacing: 0.01em;
         }
         .header h1 {
-            margin: 10px 0 0 0;
-            font-size: 28px;
+            margin: 8px 0 6px;
+            font-size: 24px;
             font-weight: 600;
         }
-        .success-icon {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
         .content {
-            background: #f9fafb;
-            padding: 30px;
-            border-radius: 0 0 10px 10px;
-        }
-        .congratulations-box {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border-left: 4px solid #10b981;
-            text-align: center;
+            padding: 30px 28px;
+            background: #ffffff;
         }
         .badge {
             display: inline-block;
-            background: #10b981;
-            color: white;
-            padding: 6px 16px;
-            border-radius: 16px;
-            font-size: 14px;
+            background: #1e3a8a;
+            color: #ffffff;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 12px;
             font-weight: 600;
-            margin: 10px 0;
+            letter-spacing: 0.04em;
         }
-        .benefits {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
+        .card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 18px;
+            margin: 18px 0 20px;
+            background: #f9fafb;
         }
-        .benefit-item {
-            padding: 12px 0;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        .benefit-item:last-child {
-            border-bottom: none;
-        }
-        .benefit-icon {
-            color: #10b981;
-            margin-right: 10px;
-        }
-        .cta-button {
+        .benefits li { margin: 8px 0; }
+        .cta {
             display: inline-block;
-            background: #10b981;
-            color: white;
-            padding: 14px 35px;
+            background: #1e3a8a;
+            color: #ffffff;
             text-decoration: none;
-            border-radius: 6px;
-            margin-top: 20px;
+            padding: 12px 22px;
+            border-radius: 8px;
             font-weight: 600;
-            font-size: 16px;
+            font-size: 14px;
         }
         .footer {
+            padding: 18px 24px 24px;
             text-align: center;
-            margin-top: 30px;
             color: #6b7280;
-            font-size: 14px;
-        }
-        .admin-note {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 20px 0;
+            font-size: 12px;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="brand-badge">
-            <div class="brand-logo">
-                <span class="brand-logo-mark">
-                    <span class="brand-logo-bar"></span>
-                    <span class="brand-logo-bar" style="height:22px;"></span>
-                    <span class="brand-logo-bar" style="height:16px;"></span>
-                </span>
+    <div class="email-container">
+        <div class="header">
+            <div class="brand">
+                <div class="brand-mark">
+                    <img src="https://www.figma.com/api/mcp/asset/9ebc4e45-75a0-4bb4-ad04-95ef40d55b52" alt="Elycap logo" class="brand-logo-img">
+                </div>
+                <div class="brand-name">{{app_name}}</div>
             </div>
-            <div class="brand-name">{{app_name}}</div>
+            <h1>Congratulations, {{user_name}}!</h1>
+            <p style="margin:0; font-size: 14px;">Your investment application has been approved</p>
         </div>
-        <div class="success-icon">🎉</div>
-        <h1>Congratulations, {{user_name}}!</h1>
-        <p style="margin: 10px 0 0 0; font-size: 18px;">Your Investment Application Has Been Approved</p>
-    </div>
-    
-    <div class="content">
-        <div class="congratulations-box">
-            <p style="font-size: 18px; margin: 0;">You are now an</p>
-            <span class="badge">INVESTOR</span>
-            <p style="margin-top: 15px; color: #6b7280;">Welcome to the Elycap Luxury Homes investment community!</p>
+        <div class="content">
+            <div class="card" style="text-align:center;">
+                <p style="margin:0; font-size: 16px; color:#111827;">You are now an</p>
+                <div style="margin:10px 0;"><span class="badge">INVESTOR</span></div>
+                <p style="margin:0;">Welcome to the Elycap Luxury Homes investment community.</p>
+            </div>
+            <p>Dear {{user_name}},</p>
+            <p>We’re excited to confirm your investor status. You can now access premium opportunities and track your portfolio in real time.</p>
+            {{admin_notes}}
+            <div class="card">
+                <p style="margin:0 0 8px; color:#111827;"><strong>Your investor benefits</strong></p>
+                <ul class="benefits" style="margin:0; padding-left: 18px;">
+                    <li>Access to your investment portfolio and performance analytics</li>
+                    <li>Revenue distribution updates and earnings tracking</li>
+                    <li>Exclusive property updates and market insights</li>
+                    <li>Priority investor support</li>
+                </ul>
+            </div>
+            <p><strong>What’s next?</strong> Visit your dashboard to explore properties and manage your investments.</p>
+            <div style="text-align:center; margin-top: 18px;">
+                <a href="{{investor_dashboard_url}}" class="cta">Go to Investor Dashboard</a>
+            </div>
+            <p style="margin-top: 24px;">Need help? Contact us at {{support_email}}.</p>
         </div>
-        
-        <p>Dear {{user_name}},</p>
-        
-        <p>We are delighted to inform you that your investment application has been approved! You have been upgraded to <strong>INVESTOR</strong> status on our platform.</p>
-        
-        {{admin_notes}}
-        
-        <div class="benefits">
-            <h3 style="margin-top: 0; color: #10b981;">Your Investor Benefits:</h3>
-            
-            <div class="benefit-item">
-                <span class="benefit-icon">✓</span>
-                <strong>Access to Investment Portfolio:</strong> View and manage all your property investments
-            </div>
-            
-            <div class="benefit-item">
-                <span class="benefit-icon">✓</span>
-                <strong>Revenue Distribution:</strong> Receive your share of rental income and property earnings
-            </div>
-            
-            <div class="benefit-item">
-                <span class="benefit-icon">✓</span>
-                <strong>Property Updates:</strong> Get exclusive updates on your invested properties
-            </div>
-            
-            <div class="benefit-item">
-                <span class="benefit-icon">✓</span>
-                <strong>Investment Tracking:</strong> Monitor property valuations and ROI in real-time
-            </div>
-            
-            <div class="benefit-item">
-                <span class="benefit-icon">✓</span>
-                <strong>Priority Support:</strong> Dedicated support for all your investment queries
-            </div>
-        </div>
-        
-        <p><strong>What's Next?</strong></p>
-        <p>Our team will contact you shortly to complete the formalities and discuss your investment opportunities. You can now access your investor dashboard to explore available properties and track your portfolio.</p>
-        
-        <div style="text-align: center;">
-            <a href="{{investor_dashboard_url}}" class="cta-button">Access Investor Dashboard</a>
-        </div>
-        
-        <p style="margin-top: 30px;">If you have any questions, please don't hesitate to reach out to our investment team.</p>
-        
         <div class="footer">
-            <p><strong>Elycap Luxury Homes Investment Platform</strong></p>
-            <p>Building wealth through fractional property ownership</p>
-            <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">
-                Contact us: {{support_email}}
-            </p>
+            <p><strong>{{app_name}}</strong> · Investment Platform</p>
+            <p>Building wealth through fractional property ownership.</p>
         </div>
     </div>
 </body>

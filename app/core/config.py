@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables"""
     
     # Application
-    APP_NAME: str = "Elycap Luxury Homes"
+    APP_NAME: str = "Elycapvest Luxury Homes"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
     

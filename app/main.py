@@ -82,7 +82,7 @@ app.include_router(contact.router)
 def root():
     """Root endpoint"""
     return {
-        "message": "Welcome Elycap Luxury Homes API",
+        "message": "Welcome Elycapvest Luxury Homes API",
         "version": settings.APP_VERSION,
         "docs": "/docs"
     }
