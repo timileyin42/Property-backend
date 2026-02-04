@@ -75,7 +75,8 @@ def send_inquiry_admin_notification(
             email=email,
             phone=phone,
             message=message,
-            property_title=property_title or "General Inquiry"
+            property_title=property_title or "General Inquiry",
+            admin_dashboard_url=f"{settings.FRONTEND_URL}/admin/inquiries"
         )
         
         params = {
