@@ -2,6 +2,7 @@
 Service for managing portfolio snapshots and trend data
 """
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from datetime import date, datetime, timedelta
 from typing import List, Dict
 from app.models.investment import Investment
