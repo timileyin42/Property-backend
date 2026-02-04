@@ -30,6 +30,7 @@ class WishlistResponse(BaseModel):
     property_location: Optional[str] = None
     property_status: Optional[str] = None
     property_image: Optional[str] = None
+    property_video: Optional[str] = None
     
     class Config:
         from_attributes = True

@@ -11,6 +11,7 @@ class PropertyCreate(BaseModel):
     description: Optional[str] = None
     status: PropertyStatus = PropertyStatus.AVAILABLE
     image_urls: Optional[List[str]] = []
+    video_urls: Optional[List[str]] = []
     
     # Property details (optional)
     bedrooms: Optional[int] = None
@@ -31,6 +32,7 @@ class PropertyUpdate(BaseModel):
     description: Optional[str] = None
     status: Optional[PropertyStatus] = None
     image_urls: Optional[List[str]] = None
+    video_urls: Optional[List[str]] = None
     
     # Property details updates
     bedrooms: Optional[int] = None
@@ -53,6 +55,7 @@ class PropertyResponse(BaseModel):
     status: PropertyStatus
     image_urls: List[str]
     primary_image: Optional[str] = None
+    video_urls: List[str]
     created_at: datetime
     updated_at: datetime
     

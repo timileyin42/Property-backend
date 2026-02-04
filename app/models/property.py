@@ -23,6 +23,7 @@ class Property(Base):
     description = Column(Text, nullable=True)
     status = Column(Enum(PropertyStatus), default=PropertyStatus.AVAILABLE, nullable=False)
     image_urls = Column(ARRAY(String), nullable=True, default=[])
+    video_urls = Column(ARRAY(String), nullable=True, default=[])
     
     # Property details
     bedrooms = Column(Integer, nullable=True)

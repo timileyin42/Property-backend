@@ -172,6 +172,7 @@ def get_my_wishlist(
             item.property_location = property.location
             item.property_status = property.status.value
             item.property_image = property.image_urls[0] if property.image_urls else None
+            item.property_video = property.video_urls[0] if property.video_urls else None
         enriched_items.append(item)
     
     return WishlistListResponse(
@@ -226,6 +227,7 @@ def add_to_wishlist(
     wishlist_item.property_location = property.location
     wishlist_item.property_status = property.status.value
     wishlist_item.property_image = property.image_urls[0] if property.image_urls else None
+    wishlist_item.property_video = property.video_urls[0] if property.video_urls else None
     
     return wishlist_item
 

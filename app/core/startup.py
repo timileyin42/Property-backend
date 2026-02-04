@@ -9,6 +9,8 @@ from app.models.user import User, UserRole
 from app.utils.hashing import hash_password
 import logging
 import sys
+import threading
+import time
 
 # Configure logging
 logging.basicConfig(
@@ -23,6 +25,7 @@ logging.basicConfig(
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
+_portfolio_snapshot_thread_started = False
 
 
 def create_admin_user():
@@ -87,4 +90,27 @@ def startup_tasks():
         logger.warning(f"⚠️  Redis connection failed: {e}")
         logger.warning("   Application will continue without Redis caching")
     
+    start_portfolio_snapshot_scheduler()
     logger.info("✨ Startup tasks completed")
+
+
+def start_portfolio_snapshot_scheduler():
+    global _portfolio_snapshot_thread_started
+    if _portfolio_snapshot_thread_started:
+        return
+    _portfolio_snapshot_thread_started = True
+    
+    def runner():
+        while True:
+            db: Session = SessionLocal()
+            try:
+                from app.services.portfolio_service import create_snapshots_for_all_investors
+                create_snapshots_for_all_investors(db)
+            except Exception as e:
+                logger.error(f"Portfolio snapshot scheduler error: {e}")
+            finally:
+                db.close()
+            time.sleep(24 * 60 * 60)
+    
+    thread = threading.Thread(target=runner, daemon=True)
+    thread.start()
