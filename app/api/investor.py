@@ -105,17 +105,16 @@ def get_portfolio_summary(
     db: Session = Depends(get_db)
 ):
     """
-    Get portfolio summary statistics for dashboard
+    Get portfolio summary statistics for dashboard with real trend data
     
     Returns:
         - Total investment value
         - Total fractions owned
         - Number of properties invested in
         - Average growth percentage
-        - 6-month growth trend (for chart)
+        - Historical growth trend (from snapshots)
     """
-    from sqlalchemy import func
-    from datetime import datetime, timedelta
+    from app.services.portfolio_service import get_portfolio_trend, create_portfolio_snapshot
     
     # Get all investments for this user
     investments = db.query(Investment).filter(Investment.user_id == current_user.id).all()
@@ -127,38 +126,71 @@ def get_portfolio_summary(
             "properties_count": 0,
             "active_investments": 0,
             "avg_growth": 0,
-            "growth_trend": []
+            "trend_labels": [],
+            "trend_values": []
         }
     
-    # Calculate totals
+    # Calculate current totals
     total_current_value = sum(inv.current_value for inv in investments)
+    total_initial_value = sum(inv.initial_value for inv in investments)
     total_fractions = sum(inv.fractions_owned or 0 for inv in investments)
     properties_count = len(set(inv.property_id for inv in investments))
+    avg_growth = ((total_current_value - total_initial_value) / total_initial_value * 100) if total_initial_value > 0 else 0
     
-    # Calculate average growth
-    total_initial = sum(inv.initial_value for inv in investments)
-    avg_growth = ((total_current_value - total_initial) / total_initial * 100) if total_initial > 0 else 0
+    # Ensure current snapshot exists
+    create_portfolio_snapshot(current_user.id, db)
     
-    # Generate 6-month growth trend (simplified - using current values)
-    # In production, you'd query historical data from a valuations table
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
-    base_value = total_initial
-    monthly_growth = avg_growth / 6 if avg_growth > 0 else 0
-    
-    growth_trend = []
-    current_value = base_value
-    for i, month in enumerate(months):
-        current_value += (base_value * monthly_growth / 100)
-        growth_trend.append({
-            "month": month,
-            "value": round(current_value, 2)
-        })
+    # Get trend data (6 months monthly by default)
+    trend_data = get_portfolio_trend(current_user.id, db, interval="monthly", months=6)
     
     return {
         "total_investment": round(total_current_value, 2),
+        "total_initial_value": round(total_initial_value, 2),
         "total_fractions": total_fractions,
         "properties_count": properties_count,
         "active_investments": len(investments),
         "avg_growth": round(avg_growth, 2),
-        "growth_trend": growth_trend
+        "trend_labels": trend_data["trend_labels"],
+        "trend_values": trend_data["trend_values"],
+        "interval": trend_data["interval"],
+        "data_points": trend_data["data_points"]
     }
+
+
+@router.get("/portfolio/trend")
+def get_portfolio_trend_endpoint(
+    interval: str = "monthly",
+    months: int = 6,
+    current_user: User = Depends(require_investor),
+    db: Session = Depends(get_db)
+):
+    """
+    Get portfolio value trend over time for charting
+    
+    Query params:
+        interval: "monthly" or "weekly" (default: monthly)
+        months: Number of months to look back (default: 6)
+    
+    Returns trend data with labels and values for charts
+    """
+    from app.services.portfolio_service import get_portfolio_trend, create_portfolio_snapshot
+    
+    # Validate interval
+    if interval not in ["monthly", "weekly"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid interval. Use 'monthly' or 'weekly'"
+        )
+    
+    # Validate months
+    if months < 1 or months > 24:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Months must be between 1 and 24"
+        )
+    
+    # Ensure current snapshot exists
+    create_portfolio_snapshot(current_user.id, db)
+    
+    # Get trend data
+    return get_portfolio_trend(current_user.id, db, interval=interval, months=months)

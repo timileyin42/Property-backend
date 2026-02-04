@@ -434,7 +434,10 @@ def update_investment_valuation(
     Update investment current valuation (admin only)
     
     Admins manually update valuations based on real market data.
+    Creates a portfolio snapshot to track historical growth.
     """
+    from app.services.portfolio_service import create_portfolio_snapshot
+    
     investment = db.query(Investment).filter(Investment.id == investment_id).first()
     
     if not investment:
@@ -447,6 +450,14 @@ def update_investment_valuation(
     investment.current_value = valuation_update.current_value
     db.commit()
     db.refresh(investment)
+    
+    # Create a snapshot to track this valuation change
+    try:
+        create_portfolio_snapshot(investment.user_id, db)
+    except Exception as e:
+        # Log but don't fail the request
+        import logging
+        logging.error(f"Failed to create portfolio snapshot: {e}")
     
     return investment
 

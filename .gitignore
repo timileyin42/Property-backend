@@ -51,3 +51,4 @@ htmlcov/
 docker-compose.local.yml
 setup_accounts.py
 delete_user.py
+PORTFOLIO_TREND_IMPLEMENTATION.md

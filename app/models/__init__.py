@@ -10,6 +10,7 @@ from app.models.distribution import EarningsDistribution, DistributionStatus
 from app.models.inquiry import PropertyInquiry, InquiryStatus
 from app.models.wishlist import Wishlist
 from app.models.investment_application import InvestmentApplication, ApplicationStatus
+from app.models.portfolio_snapshot import PortfolioSnapshot
 
 __all__ = [
     "User",
@@ -27,4 +28,5 @@ __all__ = [
     "PropertyInquiry",
     "InquiryStatus",
     "Wishlist",
+    "PortfolioSnapshot",
 ]
