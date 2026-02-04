@@ -451,9 +451,10 @@ def update_investment_valuation(
     db.commit()
     db.refresh(investment)
     
-    # Create a snapshot to track this valuation change
+    # Create/update snapshot to track this valuation change
+    # force_update=True ensures today's snapshot reflects the latest values
     try:
-        create_portfolio_snapshot(investment.user_id, db)
+        create_portfolio_snapshot(investment.user_id, db, force_update=True)
     except Exception as e:
         # Log but don't fail the request
         import logging

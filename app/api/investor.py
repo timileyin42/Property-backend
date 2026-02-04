@@ -24,23 +24,57 @@ def get_my_investments(
     # Get all investments for this user
     investments = db.query(Investment).filter(Investment.user_id == current_user.id).all()
     
-    # Enrich with property information
-    investment_responses = []
+    # Aggregate investments by property (single card per property)
+    aggregated = {}
     for investment in investments:
         property = db.query(Property).filter(Property.id == investment.property_id).first()
+        if investment.property_id not in aggregated:
+            aggregated[investment.property_id] = {
+                "investment_ids": [investment.id],
+                "user_id": investment.user_id,
+                "property": property,
+                "fractions_owned": investment.fractions_owned or 0,
+                "initial_value": investment.initial_value,
+                "current_value": investment.current_value,
+                "created_at": investment.created_at,
+                "updated_at": investment.updated_at,
+            }
+        else:
+            agg = aggregated[investment.property_id]
+            agg["investment_ids"].append(investment.id)
+            agg["fractions_owned"] += investment.fractions_owned or 0
+            agg["initial_value"] += investment.initial_value
+            agg["current_value"] += investment.current_value
+            if investment.created_at < agg["created_at"]:
+                agg["created_at"] = investment.created_at
+            if investment.updated_at > agg["updated_at"]:
+                agg["updated_at"] = investment.updated_at
+    
+    # Build response list (one entry per property)
+    investment_responses = []
+    for property_id, agg in aggregated.items():
+        property = agg["property"]
+        total_initial = agg["initial_value"]
+        total_current = agg["current_value"]
+        growth_amount = total_current - total_initial
+        growth_percentage = (growth_amount / total_initial * 100) if total_initial > 0 else 0.0
+        
+        ownership_percentage = 0.0
+        if property and property.total_fractions:
+            ownership_percentage = (agg["fractions_owned"] / property.total_fractions) * 100
         
         inv_response = InvestmentResponse(
-            id=investment.id,
-            user_id=investment.user_id,
-            property_id=investment.property_id,
-            fractions_owned=investment.fractions_owned,
-            ownership_percentage=investment.ownership_percentage,
-            initial_value=investment.initial_value,
-            current_value=investment.current_value,
-            growth_percentage=investment.growth_percentage,
-            growth_amount=investment.growth_amount,
-            created_at=investment.created_at,
-            updated_at=investment.updated_at,
+            id=min(agg["investment_ids"]),
+            user_id=agg["user_id"],
+            property_id=property_id,
+            fractions_owned=agg["fractions_owned"],
+            ownership_percentage=ownership_percentage,
+            initial_value=total_initial,
+            current_value=total_current,
+            growth_percentage=growth_percentage,
+            growth_amount=growth_amount,
+            created_at=agg["created_at"],
+            updated_at=agg["updated_at"],
             property_title=property.title if property else None,
             property_location=property.location if property else None
         )
@@ -53,7 +87,7 @@ def get_my_investments(
     
     return InvestmentListResponse(
         investments=investment_responses,
-        total=len(investments),
+        total=len(investment_responses),
         total_initial_value=total_initial,
         total_current_value=total_current,
         total_growth_percentage=total_growth

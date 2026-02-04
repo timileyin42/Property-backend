@@ -13,46 +13,40 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def create_portfolio_snapshot(user_id: int, db: Session, snapshot_date: date = None) -> PortfolioSnapshot:
+def create_portfolio_snapshot(user_id: int, db: Session, snapshot_date: date = None, force_update: bool = False) -> PortfolioSnapshot:
     """
-    Create a portfolio snapshot for a user at a specific date
+    Create or update a portfolio snapshot for a user at a specific date.
+    
+    This function aggregates ALL investments for a user into a SINGLE snapshot per day.
+    It sums up values across all investments (even multiple investments in the same property).
     
     Args:
         user_id: User ID
         db: Database session
         snapshot_date: Date for the snapshot (defaults to today)
+        force_update: If True, update existing snapshot with current values
     
     Returns:
-        Created PortfolioSnapshot
+        Created or updated PortfolioSnapshot (or None if user has no investments)
     """
     if snapshot_date is None:
         snapshot_date = date.today()
     
-    # Check if snapshot already exists for this date
-    existing = db.query(PortfolioSnapshot).filter(
-        PortfolioSnapshot.user_id == user_id,
-        PortfolioSnapshot.snapshot_date == snapshot_date
-    ).first()
-    
-    if existing:
-        logger.info(f"Snapshot already exists for user {user_id} on {snapshot_date}")
-        return existing
-    
-    # Get all active investments for this user
+    # Get all investments for this user (aggregated at portfolio level, not per property)
     investments = db.query(Investment).filter(Investment.user_id == user_id).all()
     
     if not investments:
         logger.info(f"No investments found for user {user_id}")
         return None
     
-    # Calculate totals
+    # Aggregate ALL investments into portfolio-level totals
+    # This includes multiple investments in the same property
     total_initial = sum(inv.initial_value for inv in investments)
     total_current = sum(inv.current_value for inv in investments)
     growth_amount = total_current - total_initial
     growth_percentage = (growth_amount / total_initial * 100) if total_initial > 0 else 0.0
     
-    # Get total earnings received up to this date
-    # Join through investment to get user's earnings
+    # Get total earnings received up to this date (across all investments)
     total_earnings = db.query(
         func.sum(EarningsDistribution.earnings_amount)
     ).join(
@@ -63,7 +57,30 @@ def create_portfolio_snapshot(user_id: int, db: Session, snapshot_date: date = N
         EarningsDistribution.status == "PAID"
     ).scalar() or 0.0
     
-    # Create snapshot
+    # Check if snapshot already exists for this date
+    existing = db.query(PortfolioSnapshot).filter(
+        PortfolioSnapshot.user_id == user_id,
+        PortfolioSnapshot.snapshot_date == snapshot_date
+    ).first()
+    
+    if existing and not force_update:
+        logger.info(f"Snapshot already exists for user {user_id} on {snapshot_date}")
+        return existing
+    
+    if existing and force_update:
+        # Update existing snapshot with current values
+        existing.total_investment_value = total_current
+        existing.total_initial_value = total_initial
+        existing.total_earnings_received = total_earnings
+        existing.growth_percentage = growth_percentage
+        existing.growth_amount = growth_amount
+        existing.active_investments_count = len(investments)
+        db.commit()
+        db.refresh(existing)
+        logger.info(f"Updated portfolio snapshot for user {user_id} on {snapshot_date}")
+        return existing
+    
+    # Create new snapshot (one per user per day)
     snapshot = PortfolioSnapshot(
         user_id=user_id,
         snapshot_date=snapshot_date,
@@ -79,7 +96,7 @@ def create_portfolio_snapshot(user_id: int, db: Session, snapshot_date: date = N
     db.commit()
     db.refresh(snapshot)
     
-    logger.info(f"Created portfolio snapshot for user {user_id} on {snapshot_date}")
+    logger.info(f"Created portfolio snapshot for user {user_id} on {snapshot_date} with {len(investments)} investments aggregated")
     return snapshot
 
 
