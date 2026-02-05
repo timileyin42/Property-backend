@@ -234,10 +234,16 @@ def verify_email(
     user.verification_token_expires = None
     
     db.commit()
+
+    access_token = create_access_token(data={"sub": str(user.id), "email": user.email})
+    refresh_token = create_refresh_token(data={"sub": str(user.id), "email": user.email})
     
     return {
-        "message": "Email verified successfully! You can now log in.",
-        "verified": True
+        "message": "Email verified successfully! You are now logged in.",
+        "verified": True,
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
     }
 
 
