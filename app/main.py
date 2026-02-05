@@ -1,10 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.startup import startup_tasks
 from app.api import auth, public, admin, investor, media, user
 from app.api import shortlet, investor_shortlet, inquiries, interests, contact
+from app.utils.redis_client import increment
 import logging
 import time
 
@@ -31,6 +33,34 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan
 )
+
+
+@app.middleware("http")
+async def rate_limit(request: Request, call_next):
+    if not settings.RATE_LIMIT_ENABLED:
+        return await call_next(request)
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    if request.url.path in {"/health", "/docs", "/redoc", "/openapi.json"}:
+        return await call_next(request)
+    forwarded_for = request.headers.get("x-forwarded-for")
+    client_ip = forwarded_for.split(",")[0].strip() if forwarded_for else None
+    if not client_ip and request.client:
+        client_ip = request.client.host
+    if not client_ip:
+        return await call_next(request)
+    window_seconds = settings.RATE_LIMIT_WINDOW_SECONDS
+    window_key = int(time.time() // window_seconds)
+    key = f"rate:{client_ip}:{window_key}"
+    counter = increment(key, 1, ttl=window_seconds)
+    if counter is None:
+        return await call_next(request)
+    if counter > settings.RATE_LIMIT_MAX_REQUESTS:
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Rate limit exceeded"}
+        )
+    return await call_next(request)
 
 
 # Request logging middleware

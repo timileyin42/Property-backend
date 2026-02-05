@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     REDIS_URL: str
     REDIS_MAX_CONNECTIONS: int = 10
     REDIS_CACHE_TTL: int = 300  # 5 minutes default cache TTL
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_MAX_REQUESTS: int = 100
+    RATE_LIMIT_WINDOW_SECONDS: int = 60
     
     # JWT
     SECRET_KEY: str
