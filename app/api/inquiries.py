@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.permissions import require_admin
@@ -13,18 +14,29 @@ router = APIRouter(prefix="/api/admin/inquiries", tags=["Admin - Inquiries"], de
 @router.get("", response_model=InquiryListResponse)
 def get_all_inquiries(
     status_filter: InquiryStatus = Query(None),
+    user_type: Optional[str] = Query("all"),
     skip: int = 0,
     limit: int = 100,
     current_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
-    Get all property inquiries (Unauthenticated Users) (Admin only)
+    Get all property inquiries (Admin only)
     
     Filter by status and paginate results.
     """
-    # Filter for unauthenticated users (user_id IS NULL)
-    query = db.query(PropertyInquiry).filter(PropertyInquiry.user_id.is_(None))
+    normalized_user_type = (user_type or "all").strip().lower()
+    if normalized_user_type not in {"all", "public", "authenticated"}:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid user_type. Use all, public, or authenticated."
+        )
+
+    query = db.query(PropertyInquiry)
+    if normalized_user_type == "public":
+        query = query.filter(PropertyInquiry.user_id.is_(None))
+    elif normalized_user_type == "authenticated":
+        query = query.filter(PropertyInquiry.user_id.isnot(None))
     
     # Filter by status if specified
     if status_filter:
@@ -33,8 +45,12 @@ def get_all_inquiries(
     # Get total count
     total = query.count()
     
-    # Get counts by status (scoped to unauthenticated users)
-    base_count_query = db.query(PropertyInquiry).filter(PropertyInquiry.user_id.is_(None))
+    # Get counts by status (scoped to selected user type)
+    base_count_query = db.query(PropertyInquiry)
+    if normalized_user_type == "public":
+        base_count_query = base_count_query.filter(PropertyInquiry.user_id.is_(None))
+    elif normalized_user_type == "authenticated":
+        base_count_query = base_count_query.filter(PropertyInquiry.user_id.isnot(None))
     new_count = base_count_query.filter(PropertyInquiry.status == InquiryStatus.NEW).count()
     contacted_count = base_count_query.filter(PropertyInquiry.status == InquiryStatus.CONTACTED).count()
     closed_count = base_count_query.filter(PropertyInquiry.status == InquiryStatus.CLOSED).count()
@@ -67,10 +83,7 @@ def get_inquiry(
     """
     Get specific inquiry details (Admin only)
     """
-    inquiry = db.query(PropertyInquiry).filter(
-        PropertyInquiry.id == inquiry_id,
-        PropertyInquiry.user_id.is_(None)
-    ).first()
+    inquiry = db.query(PropertyInquiry).filter(PropertyInquiry.id == inquiry_id).first()
     
     if not inquiry:
         raise HTTPException(
@@ -97,10 +110,7 @@ def update_inquiry(
     """
     Update inquiry status and details (Admin only)
     """
-    inquiry = db.query(PropertyInquiry).filter(
-        PropertyInquiry.id == inquiry_id,
-        PropertyInquiry.user_id.is_(None)
-    ).first()
+    inquiry = db.query(PropertyInquiry).filter(PropertyInquiry.id == inquiry_id).first()
     
     if not inquiry:
         raise HTTPException(
@@ -138,10 +148,7 @@ def delete_inquiry(
     """
     Delete an inquiry (Admin only)
     """
-    inquiry = db.query(PropertyInquiry).filter(
-        PropertyInquiry.id == inquiry_id,
-        PropertyInquiry.user_id.is_(None)
-    ).first()
+    inquiry = db.query(PropertyInquiry).filter(PropertyInquiry.id == inquiry_id).first()
     
     if not inquiry:
         raise HTTPException(
