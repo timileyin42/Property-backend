@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
 from app.models.property import PropertyStatus
@@ -53,9 +53,9 @@ class PropertyResponse(BaseModel):
     location: str
     description: Optional[str]
     status: PropertyStatus
-    image_urls: List[str]
+    image_urls: List[str] = []
     primary_image: Optional[str] = None
-    video_urls: List[str]
+    video_urls: List[str] = []
     created_at: datetime
     updated_at: datetime
     
@@ -75,6 +75,11 @@ class PropertyResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+    @field_validator("image_urls", "video_urls", mode="before")
+    @classmethod
+    def normalize_media_lists(cls, v):
+        return v or []
 
 
 class PropertyListResponse(BaseModel):
