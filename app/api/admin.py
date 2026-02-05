@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.permissions import require_admin
@@ -134,7 +135,7 @@ def list_investments(
 def get_all_users(
     page: int = 1,
     page_size: int = 10,
-    role: UserRole = None,
+    role: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
@@ -145,9 +146,17 @@ def get_all_users(
     """
     query = db.query(User)
     
-    # Filter by role if provided
+    # Filter by role if provided (case-insensitive)
     if role:
-        query = query.filter(User.role == role)
+        try:
+            normalized_role = UserRole(role.strip().upper())
+        except ValueError as exc:
+            valid_roles = ", ".join([r.value for r in UserRole])
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid role. Valid roles: {valid_roles}"
+            ) from exc
+        query = query.filter(User.role == normalized_role)
     
     # Get total count
     total = query.count()
