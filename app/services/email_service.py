@@ -33,6 +33,7 @@ def load_email_template(template_name: str, **kwargs) -> str:
         
         context = {
             "app_name": settings.APP_NAME,
+            "logo_url": f"{settings.FRONTEND_URL}/logo-email.png",
             **kwargs,
         }
         
