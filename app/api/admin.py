@@ -59,13 +59,12 @@ def get_dashboard_stats(
     total_users = db.query(User).count()
     users_this_month = db.query(User).filter(User.created_at >= one_month_ago).count()
     
-    # 4. Total Investment
-    total_investment = db.query(func.sum(Investment.current_value)).scalar() or 0.0
-    # Investment growth (simplified: sum of investments created this month)
+    # 4. Total Investment (capital invested, not valuation)
+    total_investment = db.query(func.sum(Investment.initial_value)).scalar() or 0.0
     investment_this_month = db.query(func.sum(Investment.initial_value)).filter(Investment.created_at >= one_month_ago).scalar() or 0.0
     
-    # Calculate investment growth percentage (approximate)
-    investment_growth_pct = 0
+    # Growth based on new invested capital this month
+    investment_growth_pct = 0.0
     if total_investment > 0:
         investment_growth_pct = (investment_this_month / total_investment) * 100
     
