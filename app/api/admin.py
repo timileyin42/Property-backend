@@ -715,6 +715,56 @@ def get_update_comments(
     )
 
 
+@router.delete("/updates/{update_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_update(
+    update_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Delete an update (admin only)
+    """
+    update = db.query(Update).filter(Update.id == update_id).first()
+
+    if not update:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Update not found"
+        )
+
+    db.delete(update)
+    db.commit()
+
+    return None
+
+
+@router.delete("/updates", response_model=BulkDeleteResponse)
+def bulk_delete_updates(
+    payload: BulkDeleteRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Bulk delete updates (admin only)
+    """
+    ids = list(dict.fromkeys(payload.ids))
+    if not ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No update ids provided"
+        )
+
+    existing_rows = db.query(Update.id).filter(Update.id.in_(ids)).all()
+    existing_ids = [row[0] for row in existing_rows]
+    missing_ids = [update_id for update_id in ids if update_id not in existing_ids]
+
+    if existing_ids:
+        db.query(Update).filter(Update.id.in_(existing_ids)).delete(synchronize_session=False)
+        db.commit()
+
+    return BulkDeleteResponse(deleted_count=len(existing_ids), missing_ids=missing_ids)
+
+
 @router.delete("/updates/comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_comment(
     comment_id: int,
