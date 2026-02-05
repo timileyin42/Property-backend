@@ -7,6 +7,7 @@ from app.schemas.investment import InvestmentCreate, InvestmentUpdate, Investmen
 from app.schemas.update import UpdateCreate, UpdateUpdate, UpdateResponse, UpdateListResponse
 from app.schemas.investment_application import InvestmentApplicationCreate, InvestmentApplicationUpdate, InvestmentApplicationReview, InvestmentApplicationResponse
 from app.schemas.dashboard import DashboardStatsResponse
+from app.schemas.common import BulkDeleteRequest, BulkDeleteResponse
 
 __all__ = [
     # Auth
@@ -37,4 +38,7 @@ __all__ = [
     "UpdateListResponse",
     # Dashboard
     "DashboardStatsResponse",
+    # Common
+    "BulkDeleteRequest",
+    "BulkDeleteResponse",
 ]

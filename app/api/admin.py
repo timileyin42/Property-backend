@@ -10,6 +10,7 @@ from app.models.update import Update, UpdateComment, UpdateLike, UpdateMedia
 from app.models.investment_application import InvestmentApplication, ApplicationStatus
 from app.models.inquiry import PropertyInquiry
 from app.schemas.user import UserListResponse, UserRoleUpdate, UserResponse, UserAdminUpdate
+from app.schemas.common import BulkDeleteRequest, BulkDeleteResponse
 from app.schemas.property import PropertyCreate, PropertyUpdate, PropertyResponse, PropertyListResponse
 from app.schemas.investment import (
     InvestmentCreate,
@@ -255,6 +256,39 @@ def delete_user(
     return None
 
 
+@router.delete("/users", response_model=BulkDeleteResponse)
+def bulk_delete_users(
+    payload: BulkDeleteRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Bulk delete users (admin only)
+    """
+    ids = list(dict.fromkeys(payload.ids))
+    if not ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No user ids provided"
+        )
+
+    if current_user.id in ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete yourself"
+        )
+
+    existing_rows = db.query(User.id).filter(User.id.in_(ids)).all()
+    existing_ids = [row[0] for row in existing_rows]
+    missing_ids = [user_id for user_id in ids if user_id not in existing_ids]
+
+    if existing_ids:
+        db.query(User).filter(User.id.in_(existing_ids)).delete(synchronize_session=False)
+        db.commit()
+
+    return BulkDeleteResponse(deleted_count=len(existing_ids), missing_ids=missing_ids)
+
+
 @router.patch("/users/{user_id}/role", response_model=UserResponse)
 def update_user_role(
     user_id: int,
@@ -385,6 +419,33 @@ def delete_property(
     db.commit()
     
     return None
+
+
+@router.delete("/properties", response_model=BulkDeleteResponse)
+def bulk_delete_properties(
+    payload: BulkDeleteRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Bulk delete properties (admin only)
+    """
+    ids = list(dict.fromkeys(payload.ids))
+    if not ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No property ids provided"
+        )
+
+    existing_rows = db.query(Property.id).filter(Property.id.in_(ids)).all()
+    existing_ids = [row[0] for row in existing_rows]
+    missing_ids = [property_id for property_id in ids if property_id not in existing_ids]
+
+    if existing_ids:
+        db.query(Property).filter(Property.id.in_(existing_ids)).delete(synchronize_session=False)
+        db.commit()
+
+    return BulkDeleteResponse(deleted_count=len(existing_ids), missing_ids=missing_ids)
 
 
 @router.post("/investments", response_model=InvestmentResponse, status_code=status.HTTP_201_CREATED)
@@ -675,6 +736,33 @@ def delete_comment(
     db.commit()
     
     return None
+
+
+@router.delete("/updates/comments", response_model=BulkDeleteResponse)
+def bulk_delete_comments(
+    payload: BulkDeleteRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Bulk delete update comments (admin only)
+    """
+    ids = list(dict.fromkeys(payload.ids))
+    if not ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No comment ids provided"
+        )
+
+    existing_rows = db.query(UpdateComment.id).filter(UpdateComment.id.in_(ids)).all()
+    existing_ids = [row[0] for row in existing_rows]
+    missing_ids = [comment_id for comment_id in ids if comment_id not in existing_ids]
+
+    if existing_ids:
+        db.query(UpdateComment).filter(UpdateComment.id.in_(existing_ids)).delete(synchronize_session=False)
+        db.commit()
+
+    return BulkDeleteResponse(deleted_count=len(existing_ids), missing_ids=missing_ids)
 
 
 @router.get("/investment-applications", response_model=list[InvestmentApplicationResponse])

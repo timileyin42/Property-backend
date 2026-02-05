@@ -6,6 +6,7 @@ from app.core.permissions import require_admin
 from app.models.user import User
 from app.models.inquiry import PropertyInquiry, InquiryStatus
 from app.schemas.inquiry import InquiryResponse, InquiryUpdate, InquiryListResponse
+from app.schemas.common import BulkDeleteRequest, BulkDeleteResponse
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/admin/inquiries", tags=["Admin - Inquiries"], dependencies=[Depends(require_admin)])
@@ -160,3 +161,30 @@ def delete_inquiry(
     db.commit()
     
     return None
+
+
+@router.delete("", response_model=BulkDeleteResponse)
+def bulk_delete_inquiries(
+    payload: BulkDeleteRequest,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Bulk delete inquiries (admin only)
+    """
+    ids = list(dict.fromkeys(payload.ids))
+    if not ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No inquiry ids provided"
+        )
+
+    existing_rows = db.query(PropertyInquiry.id).filter(PropertyInquiry.id.in_(ids)).all()
+    existing_ids = [row[0] for row in existing_rows]
+    missing_ids = [inquiry_id for inquiry_id in ids if inquiry_id not in existing_ids]
+
+    if existing_ids:
+        db.query(PropertyInquiry).filter(PropertyInquiry.id.in_(existing_ids)).delete(synchronize_session=False)
+        db.commit()
+
+    return BulkDeleteResponse(deleted_count=len(existing_ids), missing_ids=missing_ids)
