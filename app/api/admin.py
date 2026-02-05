@@ -5,7 +5,7 @@ from app.core.permissions import require_admin
 from app.models.user import User, UserRole
 from app.models.property import Property
 from app.models.investment import Investment
-from app.models.update import Update, UpdateComment, UpdateMedia
+from app.models.update import Update, UpdateComment, UpdateLike, UpdateMedia
 from app.models.investment_application import InvestmentApplication, ApplicationStatus
 from app.models.inquiry import PropertyInquiry
 from app.schemas.user import UserListResponse, UserRoleUpdate, UserResponse, UserAdminUpdate
@@ -16,7 +16,7 @@ from app.schemas.investment import (
     InvestmentResponse,
     InvestmentListResponse,
 )
-from app.schemas.update import UpdateCreate, UpdateUpdate, UpdateResponse, CommentListResponse
+from app.schemas.update import UpdateCreate, UpdateUpdate, UpdateResponse, CommentListResponse, UpdateDetailResponse
 from app.schemas.investment_application import InvestmentApplicationResponse, InvestmentApplicationReview
 from app.schemas.dashboard import DashboardStatsResponse
 from sqlalchemy.sql import func
@@ -558,6 +558,53 @@ def update_update_news(
     db.refresh(update_item)
     
     return update_item
+
+
+@router.get("/updates/{update_id}", response_model=UpdateDetailResponse)
+def get_update_details(
+    update_id: int,
+    page: int = 1,
+    page_size: int = 50,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Get update details with comments (Admin View)
+    """
+    update = db.query(Update).filter(Update.id == update_id).first()
+    if not update:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Update not found"
+        )
+
+    if update.property_id:
+        property = db.query(Property).filter(Property.id == update.property_id).first()
+        if property:
+            update.property_title = property.title
+
+    update.likes_count = db.query(UpdateLike).filter(UpdateLike.update_id == update.id).count()
+    update.comments_count = db.query(UpdateComment).filter(UpdateComment.update_id == update.id).count()
+    update.is_liked_by_user = False
+
+    query = db.query(UpdateComment).filter(UpdateComment.update_id == update_id)
+    total = query.count()
+    skip = (page - 1) * page_size
+    comments = query.order_by(UpdateComment.created_at.desc()).offset(skip).limit(page_size).all()
+
+    for comment in comments:
+        if comment.user:
+            comment.user_name = comment.user.full_name or "User"
+
+    return UpdateDetailResponse(
+        update=update,
+        comments=CommentListResponse(
+            comments=comments,
+            total=total,
+            page=page,
+            page_size=page_size
+        )
+    )
 
 
 @router.get("/updates/{update_id}/comments", response_model=CommentListResponse)

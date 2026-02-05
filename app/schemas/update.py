@@ -84,6 +84,12 @@ class CommentListResponse(BaseModel):
     page_size: int
 
 
+class UpdateDetailResponse(BaseModel):
+    """Response schema for update details with comments"""
+    update: UpdateResponse
+    comments: CommentListResponse
+
+
 class UpdateListResponse(BaseModel):
     """Response schema for paginated update list"""
     updates: list[UpdateResponse]
