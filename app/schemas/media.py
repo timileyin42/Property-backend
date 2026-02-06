@@ -12,6 +12,7 @@ class UploadSignatureResponse(BaseModel):
     upload_url: str
     resource_type: Optional[str] = None
     allowed_formats: Optional[str] = None
+    max_file_size: Optional[int] = None
     background: bool = False
 
 
