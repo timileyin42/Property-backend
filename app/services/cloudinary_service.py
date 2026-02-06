@@ -25,7 +25,8 @@ cloudinary.config(
 def generate_upload_signature(
     folder: str = None,
     resource_type: str = "image",
-    allowed_formats: list = None
+    allowed_formats: list = None,
+    max_file_size: int = None
 ) -> Dict[str, Any]:
     """
     Generate presigned upload parameters for Cloudinary
@@ -49,6 +50,9 @@ def generate_upload_signature(
     # Add allowed formats if specified
     if allowed_formats:
         upload_params["allowed_formats"] = ",".join(allowed_formats)
+    # Add max_file_size if specified
+    if max_file_size:
+        upload_params["max_file_size"] = max_file_size
     
     # Add resource type specific parameters
     # Note: resource_type is NOT included in signature when part of the URL
@@ -96,12 +100,14 @@ def generate_image_upload_signature(property_id: Optional[int] = None) -> Dict[s
         folder = f"{folder}/{property_id}"
     
     # Allow all common image formats from iOS, Android, and web
+    # Set max_file_size to 100MB for images
     return generate_upload_signature(
         folder=folder,
         resource_type="image",
         allowed_formats=[
             "jpg", "jpeg", "png", "webp", "gif", "heic", "heif", "heif-sequence", "heic-sequence"
-        ]
+        ],
+        max_file_size=100 * 1024 * 1024  # 100MB
     )
 
 
@@ -120,12 +126,14 @@ def generate_video_upload_signature(property_id: Optional[int] = None) -> Dict[s
         folder = f"{folder}/{property_id}"
     
     # Allow all common video formats from iOS, Android, and web
+    # Set max_file_size to 1GB for videos
     return generate_upload_signature(
         folder=folder,
         resource_type="video",
         allowed_formats=[
             "mp4", "webm", "ogg", "mov", "3gp", "3g2", "x-m4v", "avi", "mkv", "quicktime"
-        ]
+        ],
+        max_file_size=1024 * 1024 * 1024  # 1GB
     )
 
 
