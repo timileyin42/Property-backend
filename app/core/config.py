@@ -41,6 +41,12 @@ class Settings(BaseSettings):
     CLOUDINARY_API_KEY: str
     CLOUDINARY_API_SECRET: str
     CLOUDINARY_UPLOAD_FOLDER: str = "pol-properties"
+
+    # Backblaze B2 (S3-compatible)
+    AWS_ACCESS_KEY_ID: str
+    AWS_SECRET_ACCESS_KEY: str
+    S3_ENDPOINT: str
+    BUCKET_NAME: str
     
     # Email Configuration (Resend)
     RESEND_API_KEY: str
