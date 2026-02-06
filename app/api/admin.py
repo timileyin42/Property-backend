@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from app.utils.cache import invalidate_cache
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.core.database import get_db
@@ -418,6 +419,9 @@ def delete_property(
     
     db.delete(property)
     db.commit()
+    # Invalidate property cache so deleted property does not show up
+    invalidate_cache(f"property:{property_id}:*")
+    invalidate_cache("properties:*")
     
     return None
 
