@@ -35,7 +35,7 @@ def get_b2_bucket():
 def generate_presigned_put_url(file_key: str, content_type: str, expires_in: int = 3600) -> Dict[str, str]:
     """Generate an upload URL and required headers for B2 uploads."""
     bucket = get_b2_bucket()
-    upload_url_response = bucket.get_upload_url()
+    upload_url_response = get_b2_api().get_upload_url(bucket.id_)
     return {
         "upload_url": upload_url_response.upload_url,
         "file_key": file_key,
