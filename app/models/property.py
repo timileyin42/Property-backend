@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ARRAY, Float
+from sqlalchemy import Column, Integer, String, Text, Enum, DateTime, ARRAY, Float, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.core.database import Base
@@ -30,6 +30,8 @@ class Property(Base):
     bathrooms = Column(Integer, nullable=True)
     area_sqft = Column(Float, nullable=True)
     expected_roi = Column(Float, nullable=True)  # Expected ROI percentage
+    is_off_plan = Column(Boolean, default=False, nullable=False)
+    off_plan_duration_months = Column(Integer, nullable=True)
     
     # Fractional ownership fields
     total_fractions = Column(Integer, nullable=True)  # Total fractions available

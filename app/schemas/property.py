@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing import Optional, List
 from datetime import datetime
 from app.models.property import PropertyStatus
@@ -18,11 +18,15 @@ class PropertyCreate(BaseModel):
     bathrooms: Optional[int] = None
     area_sqft: Optional[float] = None
     expected_roi: Optional[float] = None
+    is_off_plan: Optional[bool] = False
+    off_plan_duration_months: Optional[int] = None
     
     # Fractional ownership (optional)
     total_fractions: Optional[int] = None
     fraction_price: Optional[float] = None
     project_value: Optional[float] = None
+
+    # off_plan_duration_months is optional in updates; no enforcement here
 
 
 class PropertyUpdate(BaseModel):
@@ -39,11 +43,23 @@ class PropertyUpdate(BaseModel):
     bathrooms: Optional[int] = None
     area_sqft: Optional[float] = None
     expected_roi: Optional[float] = None
+    is_off_plan: Optional[bool] = None
+    off_plan_duration_months: Optional[int] = None
     
     # Fractional ownership updates
     total_fractions: Optional[int] = None
     fraction_price: Optional[float] = None
     project_value: Optional[float] = None
+
+    @model_validator(mode="after")
+    def validate_off_plan(self):
+        if self.off_plan_duration_months is not None and self.off_plan_duration_months <= 0:
+            raise ValueError("off_plan_duration_months must be greater than 0")
+        if self.is_off_plan is True and self.off_plan_duration_months is None:
+            raise ValueError("off_plan_duration_months is required when is_off_plan is true")
+        if self.is_off_plan is False and self.off_plan_duration_months is not None:
+            raise ValueError("off_plan_duration_months is only allowed when is_off_plan is true")
+        return self
 
 
 class PropertyResponse(BaseModel):
@@ -64,6 +80,8 @@ class PropertyResponse(BaseModel):
     bathrooms: Optional[int] = None
     area_sqft: Optional[float] = None
     expected_roi: Optional[float] = None
+    is_off_plan: bool = False
+    off_plan_duration_months: Optional[int] = None
     
     # Fractional ownership
     total_fractions: Optional[int] = None

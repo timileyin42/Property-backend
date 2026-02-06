@@ -389,6 +389,7 @@ def update_property(
     
     # Update fields
     update_data = property_data.model_dump(exclude_unset=True)
+    # off_plan_duration_months is optional in updates; no enforcement here
     for field, value in update_data.items():
         setattr(property, field, value)
     

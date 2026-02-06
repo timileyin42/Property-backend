@@ -8,6 +8,7 @@ from app.models.inquiry import PropertyInquiry, InquiryStatus
 from app.models.wishlist import Wishlist
 from app.models.investment_application import InvestmentApplication, ApplicationStatus
 from app.models.update import Update, UpdateComment, UpdateLike
+from app.models.investment import Investment
 from app.schemas.user import ProfileUpdate, UserResponse
 from app.schemas.inquiry import InquiryResponse, InquiryListResponse
 from app.schemas.wishlist import WishlistCreate, WishlistUpdate, WishlistResponse, WishlistListResponse
@@ -427,6 +428,17 @@ def create_update_comment(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Update not found"
         )
+
+    if update.off_plan_only:
+        invested = db.query(Investment).filter(
+            Investment.user_id == current_user.id,
+            Investment.property_id == update.property_id
+        ).first()
+        if not invested:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This update is available to investors only"
+            )
     
     # Create comment
     comment = UpdateComment(
@@ -464,6 +476,17 @@ def get_update_comments(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Update not found"
         )
+
+    if update.off_plan_only:
+        invested = db.query(Investment).filter(
+            Investment.user_id == current_user.id,
+            Investment.property_id == update.property_id
+        ).first()
+        if not invested:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This update is available to investors only"
+            )
         
     query = db.query(UpdateComment).filter(UpdateComment.update_id == update_id)
     total = query.count()
@@ -528,6 +551,17 @@ def toggle_update_like(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Update not found"
         )
+
+    if update.off_plan_only:
+        invested = db.query(Investment).filter(
+            Investment.user_id == current_user.id,
+            Investment.property_id == update.property_id
+        ).first()
+        if not invested:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This update is available to investors only"
+            )
     
     # Check if already liked
     existing_like = db.query(UpdateLike).filter(

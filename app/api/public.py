@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import Optional
 from app.core.database import get_db
 from app.core.permissions import get_current_user_optional
 from app.models.user import User
 from app.models.property import Property, PropertyStatus
 from app.models.update import Update, UpdateComment, UpdateLike
+from app.models.investment import Investment
 from app.schemas.property import PropertyResponse, PropertyListResponse
 from app.schemas.update import UpdateResponse, UpdateListResponse, CommentListResponse, UpdateCommentResponse
 
@@ -139,6 +141,22 @@ def get_updates(
     Supports pagination.
     """
     query = db.query(Update)
+
+    if current_user:
+        invested_property_ids = [
+            row[0] for row in db.query(Investment.property_id)
+            .filter(Investment.user_id == current_user.id)
+            .distinct()
+            .all()
+        ]
+        if invested_property_ids:
+            query = query.filter(
+                or_(Update.off_plan_only.is_(False), Update.property_id.in_(invested_property_ids))
+            )
+        else:
+            query = query.filter(Update.off_plan_only.is_(False))
+    else:
+        query = query.filter(Update.off_plan_only.is_(False))
     
     # Filter by property if provided
     if property_id:
@@ -196,6 +214,22 @@ def get_update(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Update not found"
         )
+
+    if update.off_plan_only:
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This update is available to investors only"
+            )
+        invested = db.query(Investment).filter(
+            Investment.user_id == current_user.id,
+            Investment.property_id == update.property_id
+        ).first()
+        if not invested:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This update is available to investors only"
+            )
     
     # Enrich with property title if exists
     if update.property_id:
@@ -225,6 +259,7 @@ def get_public_update_comments(
     update_id: int,
     page: int = 1,
     page_size: int = 20,
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: Session = Depends(get_db)
 ):
     """
@@ -236,6 +271,28 @@ def get_public_update_comments(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Update not found"
+        )
+
+    if update.off_plan_only:
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This update is available to investors only"
+            )
+        invested = db.query(Investment).filter(
+            Investment.user_id == current_user.id,
+            Investment.property_id == update.property_id
+        ).first()
+        if not invested:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This update is available to investors only"
+            )
+
+    if update.off_plan_only:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This update is available to investors only"
         )
         
     query = db.query(UpdateComment).filter(UpdateComment.update_id == update_id)

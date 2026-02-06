@@ -19,6 +19,7 @@ class UpdateCreate(BaseModel):
     content: str = Field(..., min_length=10)
     image_url: Optional[str] = None
     video_url: Optional[str] = None
+    off_plan_only: Optional[bool] = False
     media_files: Optional[List[MediaItem]] = None
 
 
@@ -29,6 +30,7 @@ class UpdateUpdate(BaseModel):
     content: Optional[str] = Field(None, min_length=10)
     image_url: Optional[str] = None
     video_url: Optional[str] = None
+    off_plan_only: Optional[bool] = None
     media_files: Optional[List[MediaItem]] = None
 
 
@@ -40,6 +42,7 @@ class UpdateResponse(BaseModel):
     content: str
     image_url: Optional[str] = None
     video_url: Optional[str] = None
+    off_plan_only: bool = False
     media_files: List[MediaItem] = []
     created_at: datetime
     updated_at: datetime
