@@ -35,12 +35,14 @@ def get_b2_bucket():
 def generate_presigned_put_url(file_key: str, content_type: str, expires_in: int = 3600) -> Dict[str, str]:
     """Generate an upload URL and required headers for B2 uploads."""
     bucket = get_b2_bucket()
-    upload_url_response = get_b2_api().get_upload_url(bucket.id_)
+    upload_url_response = get_b2_api().session.get_upload_url(bucket.id_)
+    upload_url = getattr(upload_url_response, "upload_url", None) or upload_url_response.get("uploadUrl")
+    auth_token = getattr(upload_url_response, "authorization_token", None) or upload_url_response.get("authorizationToken")
     return {
-        "upload_url": upload_url_response.upload_url,
+        "upload_url": upload_url,
         "file_key": file_key,
         "upload_headers": {
-            "Authorization": upload_url_response.authorization_token,
+            "Authorization": auth_token,
             "X-Bz-File-Name": file_key,
             "Content-Type": content_type,
             "X-Bz-Content-Sha1": "do_not_verify"
