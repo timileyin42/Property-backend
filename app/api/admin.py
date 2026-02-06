@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.permissions import require_admin
 from app.models.user import User, UserRole
-from app.models.property import Property
+from app.models.property import Property, PropertyStatus
 from app.models.investment import Investment
 from app.models.update import Update, UpdateComment, UpdateLike, UpdateMedia
 from app.models.investment_application import InvestmentApplication, ApplicationStatus
@@ -487,6 +487,22 @@ def assign_investment(
             detail="Property not found"
         )
     
+    # Update fractions sold for fractional properties
+    if property.is_fractional:
+        if investment_data.fractions_owned is None or investment_data.fractions_owned <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="fractions_owned is required for fractional properties"
+            )
+        if investment_data.fractions_owned > property.fractions_available:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Not enough fractions available"
+            )
+        property.fractions_sold += investment_data.fractions_owned
+        if property.total_fractions and property.fractions_sold >= property.total_fractions:
+            property.status = PropertyStatus.SOLD
+
     # Create investment
     new_investment = Investment(**investment_data.model_dump())
     
