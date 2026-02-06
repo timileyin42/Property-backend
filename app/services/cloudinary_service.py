@@ -50,7 +50,7 @@ def generate_upload_signature(
     # Add allowed formats if specified
     if allowed_formats:
         upload_params["allowed_formats"] = ",".join(allowed_formats)
-    # Add max_file_size if specified
+    # Add max_file_size if specified (not a signable param for Cloudinary)
     if max_file_size:
         upload_params["max_file_size"] = max_file_size
     
@@ -59,6 +59,8 @@ def generate_upload_signature(
     # We only add it to params for frontend info, but remove before signing if needed
     
     params_to_sign = upload_params.copy()
+    # Cloudinary ignores max_file_size in signature verification
+    params_to_sign.pop("max_file_size", None)
     
     if resource_type == "video":
         # Don't add resource_type to params_to_sign as it's in the URL
