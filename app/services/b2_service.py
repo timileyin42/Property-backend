@@ -3,6 +3,7 @@ Backblaze B2 native SDK helpers for upload and download URLs.
 """
 
 from typing import Dict
+from urllib.parse import quote
 from b2sdk.v2 import InMemoryAccountInfo, B2Api
 from app.core.config import settings
 
@@ -38,12 +39,13 @@ def generate_presigned_put_url(file_key: str, content_type: str, expires_in: int
     upload_url_response = get_b2_api().session.get_upload_url(bucket.id_)
     upload_url = getattr(upload_url_response, "upload_url", None) or upload_url_response.get("uploadUrl")
     auth_token = getattr(upload_url_response, "authorization_token", None) or upload_url_response.get("authorizationToken")
+    encoded_name = quote(file_key, safe="")
     return {
         "upload_url": upload_url,
         "file_key": file_key,
         "upload_headers": {
             "Authorization": auth_token,
-            "X-Bz-File-Name": file_key,
+            "X-Bz-File-Name": encoded_name,
             "Content-Type": content_type,
             "X-Bz-Content-Sha1": "do_not_verify"
         }
@@ -57,8 +59,9 @@ def generate_presigned_get_url(file_key: str, expires_in: int = 3600) -> Dict[st
         file_name_prefix="",
         valid_duration_in_seconds=expires_in
     )
+    encoded_name = quote(file_key, safe="")
     download_url = (
-        f"{settings.B2_DOWNLOAD_URL}/file/{settings.B2_BUCKET_NAME}/{file_key}"
+        f"{settings.B2_DOWNLOAD_URL}/file/{settings.B2_BUCKET_NAME}/{encoded_name}"
         f"?Authorization={token}"
     )
     return {
