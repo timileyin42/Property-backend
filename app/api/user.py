@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.permissions import get_current_user
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.property import Property
 from app.models.inquiry import PropertyInquiry, InquiryStatus
 from app.models.wishlist import Wishlist
@@ -300,46 +300,49 @@ def submit_investment_application(
     """
     Submit an application to become an investor
     
-    Users can apply to upgrade their role to INVESTOR.
-    Admins will review and approve/reject applications.
+    Applications are auto-approved and users are upgraded immediately.
     """
-    from app.services.email_service import send_application_admin_notification
+    from app.services.email_service import send_application_approved
     
-    # Check if user already has a pending application
     existing_application = db.query(InvestmentApplication).filter(
-        InvestmentApplication.user_id == current_user.id,
-        InvestmentApplication.status == ApplicationStatus.PENDING
-    ).first()
+        InvestmentApplication.user_id == current_user.id
+    ).order_by(InvestmentApplication.created_at.desc()).first()
     
     if existing_application:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You already have a pending application"
-        )
+        if existing_application.status != ApplicationStatus.APPROVED:
+            existing_application.status = ApplicationStatus.APPROVED
+            existing_application.reviewed_at = datetime.now(timezone.utc)
+            existing_application.admin_notes = "Auto-approved"
+            db.commit()
+            db.refresh(existing_application)
+        if current_user.role != UserRole.INVESTOR:
+            current_user.role = UserRole.INVESTOR
+            db.commit()
+            db.refresh(current_user)
+        return existing_application
     
     # Create new application
     new_application = InvestmentApplication(
         user_id=current_user.id,
+        status=ApplicationStatus.APPROVED,
+        reviewed_at=datetime.now(timezone.utc),
+        admin_notes="Auto-approved",
         **application_data.model_dump()
     )
     
     db.add(new_application)
+    current_user.role = UserRole.INVESTOR
     db.commit()
     db.refresh(new_application)
-    
-    # Send email notification to admin
+
     try:
-        send_application_admin_notification(
-            application_id=new_application.id,
-            user_name=current_user.full_name,
-            user_email=current_user.email,
-            motivation=application_data.motivation,
-            investment_amount=application_data.investment_amount,
-            experience=application_data.experience
+        send_application_approved(
+            email=current_user.email,
+            name=current_user.full_name,
+            admin_notes="Auto-approved"
         )
     except Exception as e:
-        # Log error but don't fail the request
-        logger.error(f"Failed to send admin notification for application {new_application.id}: {e}")
+        logger.error(f"Failed to send auto-approval email for application {new_application.id}: {e}")
     
     return new_application
 

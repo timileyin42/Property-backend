@@ -27,7 +27,7 @@ class User(Base):
     address = Column(String, nullable=True)
     city = Column(String, nullable=True)
     state = Column(String, nullable=True)
-    role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
+    role = Column(Enum(UserRole), default=UserRole.INVESTOR, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     
     # Email verification
