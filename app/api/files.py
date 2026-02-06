@@ -25,9 +25,6 @@ def presign_upload(
 
 
 @router.post("/presign-download", response_model=PresignDownloadResponse)
-def presign_download(
-    request: PresignDownloadRequest,
-    current_user: User = Depends(require_admin)
-):
-    """Generate a presigned download URL (Admin only)."""
+def presign_download(request: PresignDownloadRequest):
+    """Generate a presigned download URL (public)."""
     return generate_presigned_get_url(request.file_key)
