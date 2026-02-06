@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Dict
 
 
 class PresignUploadRequest(BaseModel):
@@ -11,6 +12,7 @@ class PresignUploadResponse(BaseModel):
     """Response schema for presigned upload URL"""
     upload_url: str
     file_key: str
+    upload_headers: Dict[str, str]
 
 
 class PresignDownloadRequest(BaseModel):

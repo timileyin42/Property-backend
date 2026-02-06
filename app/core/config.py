@@ -47,6 +47,14 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY: str
     S3_ENDPOINT: str
     BUCKET_NAME: str
+
+    # Backblaze B2 (native SDK)
+    B2_ACCOUNT_ID: str
+    B2_APPLICATION_KEY: str
+    B2_BUCKET_NAME: str
+    B2_API_URL: str
+    B2_DOWNLOAD_URL: str
+    B2_REGION: str
     
     # Email Configuration (Resend)
     RESEND_API_KEY: str

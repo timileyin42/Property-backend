@@ -32,6 +32,7 @@ pytz==2024.2
 # Media Upload
 cloudinary==1.36.0
 boto3==1.34.161
+b2sdk==1.24.0
 
 # Email
 resend==0.8.0

@@ -1,52 +1,63 @@
 """
-Backblaze B2 S3-compatible presigned URL helpers.
+Backblaze B2 native SDK helpers for upload and download URLs.
 """
 
 from typing import Dict
-import boto3
-from botocore.config import Config
+from b2sdk.v2 import InMemoryAccountInfo, B2Api
 from app.core.config import settings
 
+_b2_api = None
+_b2_bucket = None
 
-def get_b2_client():
-    """Create an S3 client for Backblaze B2 using v4 signatures."""
-    return boto3.client(
-        "s3",
-        endpoint_url=settings.S3_ENDPOINT,
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        config=Config(signature_version="s3v4", s3={"addressing_style": "path"})
-    )
+
+def get_b2_api() -> B2Api:
+    """Create or return a cached B2 API client."""
+    global _b2_api
+    if _b2_api is None:
+        info = InMemoryAccountInfo()
+        _b2_api = B2Api(info)
+        _b2_api.authorize_account(
+            "production",
+            settings.B2_ACCOUNT_ID,
+            settings.B2_APPLICATION_KEY
+        )
+    return _b2_api
+
+
+def get_b2_bucket():
+    """Get the configured B2 bucket instance."""
+    global _b2_bucket
+    if _b2_bucket is None:
+        _b2_bucket = get_b2_api().get_bucket_by_name(settings.B2_BUCKET_NAME)
+    return _b2_bucket
 
 
 def generate_presigned_put_url(file_key: str, content_type: str, expires_in: int = 3600) -> Dict[str, str]:
-    """Generate a presigned PUT URL for uploads."""
-    client = get_b2_client()
-    upload_url = client.generate_presigned_url(
-        "put_object",
-        Params={
-            "Bucket": settings.BUCKET_NAME,
-            "Key": file_key,
-            "ContentType": content_type
-        },
-        ExpiresIn=expires_in
-    )
+    """Generate an upload URL and required headers for B2 uploads."""
+    bucket = get_b2_bucket()
+    upload_url_response = bucket.get_upload_url()
     return {
-        "upload_url": upload_url,
-        "file_key": file_key
+        "upload_url": upload_url_response.upload_url,
+        "file_key": file_key,
+        "upload_headers": {
+            "Authorization": upload_url_response.authorization_token,
+            "X-Bz-File-Name": file_key,
+            "Content-Type": content_type,
+            "X-Bz-Content-Sha1": "do_not_verify"
+        }
     }
 
 
 def generate_presigned_get_url(file_key: str, expires_in: int = 3600) -> Dict[str, str]:
-    """Generate a presigned GET URL for downloads."""
-    client = get_b2_client()
-    download_url = client.generate_presigned_url(
-        "get_object",
-        Params={
-            "Bucket": settings.BUCKET_NAME,
-            "Key": file_key
-        },
-        ExpiresIn=expires_in
+    """Generate a signed download URL for private files."""
+    bucket = get_b2_bucket()
+    token = bucket.get_download_authorization(
+        file_name_prefix="",
+        valid_duration_in_seconds=expires_in
+    )
+    download_url = (
+        f"{settings.B2_DOWNLOAD_URL}/file/{settings.B2_BUCKET_NAME}/{file_key}"
+        f"?Authorization={token}"
     )
     return {
         "download_url": download_url,
