@@ -95,10 +95,13 @@ def generate_image_upload_signature(property_id: Optional[int] = None) -> Dict[s
     if property_id:
         folder = f"{folder}/{property_id}"
     
+    # Allow all common image formats from iOS, Android, and web
     return generate_upload_signature(
         folder=folder,
         resource_type="image",
-        allowed_formats=["jpg", "jpeg", "png", "webp", "gif"]
+        allowed_formats=[
+            "jpg", "jpeg", "png", "webp", "gif", "heic", "heif", "heif-sequence", "heic-sequence"
+        ]
     )
 
 
@@ -116,10 +119,13 @@ def generate_video_upload_signature(property_id: Optional[int] = None) -> Dict[s
     if property_id:
         folder = f"{folder}/{property_id}"
     
+    # Allow all common video formats from iOS, Android, and web
     return generate_upload_signature(
         folder=folder,
         resource_type="video",
-        allowed_formats=["mp4", "mov", "avi", "webm", "mkv"]
+        allowed_formats=[
+            "mp4", "webm", "ogg", "mov", "3gp", "3g2", "x-m4v", "avi", "mkv", "quicktime"
+        ]
     )
 
 
