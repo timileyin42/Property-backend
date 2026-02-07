@@ -15,6 +15,7 @@ from app.schemas.common import BulkDeleteRequest, BulkDeleteResponse
 from app.schemas.property import PropertyCreate, PropertyUpdate, PropertyResponse, PropertyListResponse
 from app.schemas.investment import (
     InvestmentCreate,
+    InvestmentFractionRemove,
     InvestmentUpdate,
     InvestmentResponse,
     InvestmentListResponse,
@@ -511,6 +512,72 @@ def assign_investment(
     db.refresh(new_investment)
     
     return new_investment
+
+
+@router.patch("/investments/{investment_id}/fractions/remove", response_model=InvestmentResponse)
+def remove_investment_fractions(
+    investment_id: int,
+    removal: InvestmentFractionRemove,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Remove fractions from an investment (admin only)
+    """
+    investment = db.query(Investment).filter(Investment.id == investment_id).first()
+    if not investment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Investment not found"
+        )
+
+    property = db.query(Property).filter(Property.id == investment.property_id).first()
+    if not property:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Property not found"
+        )
+
+    if not property.is_fractional or not investment.fractions_owned or investment.fractions_owned <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Investment is not fractional"
+        )
+
+    if removal.fractions_to_remove > investment.fractions_owned:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot remove more fractions than owned"
+        )
+
+    if removal.fractions_to_remove > property.fractions_sold:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot remove more fractions than sold"
+        )
+
+    per_fraction_initial = investment.initial_value / investment.fractions_owned
+    per_fraction_current = investment.current_value / investment.fractions_owned
+
+    investment.fractions_owned -= removal.fractions_to_remove
+    investment.initial_value = max(
+        0.0,
+        investment.initial_value - (per_fraction_initial * removal.fractions_to_remove)
+    )
+    investment.current_value = max(
+        0.0,
+        investment.current_value - (per_fraction_current * removal.fractions_to_remove)
+    )
+
+    property.fractions_sold = max(0, property.fractions_sold - removal.fractions_to_remove)
+    if property.total_fractions and property.fractions_sold < property.total_fractions:
+        if property.status == PropertyStatus.SOLD:
+            property.status = PropertyStatus.AVAILABLE
+
+    db.commit()
+    db.refresh(investment)
+
+    return investment
 
 
 @router.patch("/investments/{investment_id}/valuation", response_model=InvestmentResponse)

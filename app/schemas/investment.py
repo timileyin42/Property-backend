@@ -18,6 +18,11 @@ class InvestmentUpdate(BaseModel):
     current_value: float = Field(..., gt=0)
 
 
+class InvestmentFractionRemove(BaseModel):
+    """Schema for removing investment fractions (admin only)"""
+    fractions_to_remove: int = Field(..., gt=0)
+
+
 class InvestmentResponse(BaseModel):
     """Response schema for investment data"""
     id: int
