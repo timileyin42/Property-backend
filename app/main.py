@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.startup import startup_tasks
-from app.api import auth, public, admin, investor, media, user, files, media_proxy
+from app.api import auth, public, admin, investor, user, files, media_proxy
 from app.api import shortlet, investor_shortlet, inquiries, contact
 from app.utils.redis_client import increment
 import logging
@@ -100,7 +100,6 @@ app.include_router(public.router)
 app.include_router(user.router)
 app.include_router(admin.router)
 app.include_router(investor.router)
-app.include_router(media.router)
 app.include_router(files.router)
 app.include_router(shortlet.router)
 app.include_router(investor_shortlet.router)

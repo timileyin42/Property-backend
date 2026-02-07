@@ -36,25 +36,10 @@ class Settings(BaseSettings):
     ADMIN_NAME: str
     ADMIN_PHONE: str
     
-    # Cloudinary Configuration
-    CLOUDINARY_CLOUD_NAME: str
-    CLOUDINARY_API_KEY: str
-    CLOUDINARY_API_SECRET: str
-    CLOUDINARY_UPLOAD_FOLDER: str = "pol-properties"
-
-    # Backblaze B2 (S3-compatible)
-    AWS_ACCESS_KEY_ID: str
-    AWS_SECRET_ACCESS_KEY: str
-    S3_ENDPOINT: str
-    BUCKET_NAME: str
-
-    # Backblaze B2 (native SDK)
-    B2_ACCOUNT_ID: str
-    B2_APPLICATION_KEY: str
-    B2_BUCKET_NAME: str
-    B2_API_URL: str
-    B2_DOWNLOAD_URL: str
-    B2_REGION: str
+    # Google Cloud Storage (signed URLs)
+    GCP_BUCKET_NAME: str
+    GCP_SERVICE_ACCOUNT_KEY_BASE64: str
+    GCP_SIGNED_URL_EXPIRES_SECONDS: int = 3600
     
     # Email Configuration (Resend)
     RESEND_API_KEY: str

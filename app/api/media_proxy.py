@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import RedirectResponse
-from app.services.b2_service import generate_signed_download_url
+from app.services.gcs_service import generate_signed_download_url
 
 router = APIRouter(tags=["Media Proxy"])
 

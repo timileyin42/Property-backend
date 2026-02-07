@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from app.core.config import settings
 from app.core.permissions import require_admin
 from app.models.user import User
 from app.schemas.files import (
@@ -7,7 +8,7 @@ from app.schemas.files import (
     PresignDownloadRequest,
     PresignDownloadResponse
 )
-from app.services.b2_service import (
+from app.services.gcs_service import (
     generate_presigned_put_url,
     generate_presigned_get_url
 )
@@ -21,10 +22,17 @@ def presign_upload(
     current_user: User = Depends(require_admin)
 ):
     """Generate a presigned upload URL (Admin only)."""
-    return generate_presigned_put_url(request.filename, request.content_type)
+    return generate_presigned_put_url(
+        request.filename,
+        request.content_type,
+        expires_in=settings.GCP_SIGNED_URL_EXPIRES_SECONDS
+    )
 
 
 @router.post("/presign-download", response_model=PresignDownloadResponse)
 def presign_download(request: PresignDownloadRequest):
     """Generate a presigned download URL (public)."""
-    return generate_presigned_get_url(request.file_key)
+    return generate_presigned_get_url(
+        request.file_key,
+        expires_in=settings.GCP_SIGNED_URL_EXPIRES_SECONDS
+    )
