@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import RedirectResponse
 from app.services.b2_service import generate_signed_download_url
 
 router = APIRouter(tags=["Media Proxy"])
@@ -6,7 +7,7 @@ router = APIRouter(tags=["Media Proxy"])
 
 @router.get("/media/{file_key:path}")
 def get_media_url(file_key: str):
-    """Return a signed B2 download URL for a given file key."""
+    """Redirect to a signed B2 download URL for a given file key."""
     try:
         url = generate_signed_download_url(file_key)
     except FileNotFoundError:
@@ -19,4 +20,4 @@ def get_media_url(file_key: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to generate download URL"
         )
-    return {"url": url}
+    return RedirectResponse(url=url, status_code=status.HTTP_302_FOUND)
