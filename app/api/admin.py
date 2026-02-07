@@ -562,6 +562,12 @@ def create_update(
     """
     Post a property update/news (admin only)
     """
+    if update_data.off_plan_only and not update_data.property_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Property ID is required for off-plan updates"
+        )
+
     # Verify property exists if property_id is provided
     if update_data.property_id:
         property = db.query(Property).filter(Property.id == update_data.property_id).first()
@@ -613,6 +619,14 @@ def update_update_news(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Update not found"
         )
+
+    if update_data.off_plan_only:
+        has_property_id = update_data.property_id or update_item.property_id
+        if not has_property_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Property ID is required for off-plan updates"
+            )
         
     # Verify property exists if property_id is provided
     if update_data.property_id is not None:

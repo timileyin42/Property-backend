@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     SALES_EMAIL: str
     FROM_EMAIL: str
     FRONTEND_URL: str
+
+    # Media cache base URL (e.g., https://elycapfracprop.com/media)
+    MEDIA_BASE_URL: str = ""
     
     @property
     def cors_origins_list(self) -> List[str]:

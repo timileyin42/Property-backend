@@ -64,6 +64,9 @@ def generate_presigned_get_url(file_key: str, expires_in: int = 3600) -> Dict[st
         f"{settings.B2_DOWNLOAD_URL}/file/{settings.B2_BUCKET_NAME}/{encoded_name}"
         f"?Authorization={token}"
     )
+    if not settings.MEDIA_BASE_URL:
+        raise ValueError("MEDIA_BASE_URL is not configured")
+    download_url = f"{settings.MEDIA_BASE_URL.rstrip('/')}/{file_key.lstrip('/')}"
     return {
         "download_url": download_url,
         "file_key": file_key
