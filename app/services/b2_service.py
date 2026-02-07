@@ -53,17 +53,7 @@ def generate_presigned_put_url(file_key: str, content_type: str, expires_in: int
 
 
 def generate_presigned_get_url(file_key: str, expires_in: int = 3600) -> Dict[str, str]:
-    """Generate a signed download URL for private files."""
-    bucket = get_b2_bucket()
-    token = bucket.get_download_authorization(
-        file_name_prefix="",
-        valid_duration_in_seconds=expires_in
-    )
-    encoded_name = quote(file_key, safe="")
-    download_url = (
-        f"{settings.B2_DOWNLOAD_URL}/file/{settings.B2_BUCKET_NAME}/{encoded_name}"
-        f"?Authorization={token}"
-    )
+    """Return cached media URL for a file key."""
     if not settings.MEDIA_BASE_URL:
         raise ValueError("MEDIA_BASE_URL is not configured")
     download_url = f"{settings.MEDIA_BASE_URL.rstrip('/')}/{file_key.lstrip('/')}"
@@ -71,3 +61,22 @@ def generate_presigned_get_url(file_key: str, expires_in: int = 3600) -> Dict[st
         "download_url": download_url,
         "file_key": file_key
     }
+
+
+def generate_signed_download_url(file_key: str, expires_in: int = 3600) -> str:
+    """Generate a signed Backblaze B2 download URL for a private file."""
+    bucket = get_b2_bucket()
+    try:
+        bucket.get_file_info_by_name(file_key)
+    except Exception as exc:
+        raise FileNotFoundError(str(exc)) from exc
+
+    token = bucket.get_download_authorization(
+        file_name_prefix=file_key,
+        valid_duration_in_seconds=expires_in
+    )
+    encoded_name = quote(file_key, safe="")
+    return (
+        f"{settings.B2_DOWNLOAD_URL}/file/{settings.B2_BUCKET_NAME}/{encoded_name}"
+        f"?Authorization={token}"
+    )

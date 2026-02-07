@@ -1,6 +1,6 @@
 """API package initialization"""
 
-from app.api import auth, public, admin, investor, files
+from app.api import auth, public, admin, investor, files, media_proxy
 
 __all__ = [
     "auth",
@@ -8,4 +8,5 @@ __all__ = [
     "admin",
     "investor",
     "files",
+    "media_proxy",
 ]
