@@ -7,6 +7,7 @@ from urllib.parse import quote
 from b2sdk.v2 import InMemoryAccountInfo, B2Api
 from app.core.config import settings
 
+# Cache the B2 client and bucket to avoid re-auth on every request.
 _b2_api = None
 _b2_bucket = None
 
@@ -36,6 +37,7 @@ def get_b2_bucket():
 def generate_presigned_put_url(file_key: str, content_type: str, expires_in: int = 3600) -> Dict[str, str]:
     """Generate an upload URL and required headers for B2 uploads."""
     bucket = get_b2_bucket()
+    # B2 SDK exposes upload URLs from the session layer.
     upload_url_response = get_b2_api().session.get_upload_url(bucket.id_)
     upload_url = getattr(upload_url_response, "upload_url", None) or upload_url_response.get("uploadUrl")
     auth_token = getattr(upload_url_response, "authorization_token", None) or upload_url_response.get("authorizationToken")
@@ -66,11 +68,17 @@ def generate_presigned_get_url(file_key: str, expires_in: int = 3600) -> Dict[st
 def generate_signed_download_url(file_key: str, expires_in: int = 3600) -> str:
     """Generate a signed Backblaze B2 download URL for a private file."""
     bucket = get_b2_bucket()
-    try:
-        bucket.get_file_info_by_name(file_key)
-    except Exception as exc:
-        raise FileNotFoundError(str(exc)) from exc
 
+    # Use list_file_names to verify existence. This works with restricted keys that
+    # allow listFiles but not get_file_info_by_name.
+    found_name = None
+    for file_info, _ in bucket.list_file_names(prefix=file_key, max_file_count=1):
+        found_name = getattr(file_info, "file_name", None)
+        break
+    if found_name != file_key:
+        raise FileNotFoundError("File not found")
+
+    # Create a short-lived download authorization token.
     token = bucket.get_download_authorization(
         file_name_prefix=file_key,
         valid_duration_in_seconds=expires_in
