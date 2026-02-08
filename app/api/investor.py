@@ -161,10 +161,15 @@ def get_portfolio_summary(
     if not investments:
         return {
             "total_investment": 0,
+            "total_current_value": 0,
+            "total_initial_value": 0,
             "total_fractions": 0,
+            "lifetime_investment_value": 0,
+            "lifetime_fractions": 0,
             "properties_count": 0,
             "active_investments": 0,
             "avg_growth": 0,
+            "total_growth_percentage": 0,
             "trend_labels": [],
             "trend_values": []
         }
@@ -174,7 +179,30 @@ def get_portfolio_summary(
     total_initial_value = sum(inv.initial_value for inv in investments)
     total_fractions = sum(inv.fractions_owned or 0 for inv in investments)
     properties_count = len(set(inv.property_id for inv in investments))
-    avg_growth = ((total_current_value - total_initial_value) / total_initial_value * 100) if total_initial_value > 0 else 0
+    total_growth = ((total_current_value - total_initial_value) / total_initial_value * 100) if total_initial_value > 0 else 0
+    avg_growth = total_growth
+
+    # Calculate lifetime totals (includes sold fractions)
+    property_ids = {inv.property_id for inv in investments}
+    properties = {}
+    if property_ids:
+        props = db.query(Property).filter(Property.id.in_(property_ids)).all()
+        properties = {prop.id: prop for prop in props}
+
+    lifetime_investment_value = 0.0
+    lifetime_fractions = 0
+    for inv in investments:
+        prop = properties.get(inv.property_id)
+        fractions_owned = inv.fractions_owned or 0
+        fractions_sold = inv.fractions_sold or 0
+        total_fractions_purchased = fractions_owned + fractions_sold
+
+        if prop and prop.is_fractional and prop.fraction_price:
+            lifetime_investment_value += total_fractions_purchased * prop.fraction_price
+            lifetime_fractions += total_fractions_purchased
+        else:
+            lifetime_investment_value += inv.initial_value
+            lifetime_fractions += fractions_owned
     
     # Ensure current snapshot exists
     create_portfolio_snapshot(current_user.id, db)
@@ -184,11 +212,15 @@ def get_portfolio_summary(
     
     return {
         "total_investment": round(total_current_value, 2),
+        "total_current_value": round(total_current_value, 2),
         "total_initial_value": round(total_initial_value, 2),
         "total_fractions": total_fractions,
+        "lifetime_investment_value": round(lifetime_investment_value, 2),
+        "lifetime_fractions": lifetime_fractions,
         "properties_count": properties_count,
         "active_investments": len(investments),
         "avg_growth": round(avg_growth, 2),
+        "total_growth_percentage": round(total_growth, 2),
         "trend_labels": trend_data["trend_labels"],
         "trend_values": trend_data["trend_values"],
         "interval": trend_data["interval"],
