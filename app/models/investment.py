@@ -16,6 +16,9 @@ class Investment(Base):
     # Fractional ownership
     fractions_owned = Column(Integer, nullable=True)  # Number of fractions owned (null for non-fractional)
     fractions_sold = Column(Integer, nullable=False, default=0)
+    sold_price_per_fraction = Column(Float, nullable=True)
+    sold_value_total = Column(Float, nullable=False, default=0.0)
+    sold_profit_total = Column(Float, nullable=False, default=0.0)
     
     initial_value = Column(Float, nullable=False)
     current_value = Column(Float, nullable=False)

@@ -30,6 +30,9 @@ class InvestmentResponse(BaseModel):
     property_id: int
     fractions_owned: Optional[int] = None
     fractions_sold: Optional[int] = None
+    sold_price_per_fraction: Optional[float] = None
+    sold_value_total: Optional[float] = None
+    sold_profit_total: Optional[float] = None
     ownership_percentage: float = 0.0
     initial_value: float
     current_value: float
@@ -54,6 +57,9 @@ class InvestmentDetailResponse(BaseModel):
     property_id: int
     fractions_owned: Optional[int] = None
     fractions_sold: Optional[int] = None
+    sold_price_per_fraction: Optional[float] = None
+    sold_value_total: Optional[float] = None
+    sold_profit_total: Optional[float] = None
     initial_value: float
     current_value: float
     growth_percentage: float

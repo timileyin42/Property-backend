@@ -35,6 +35,10 @@ def get_my_investments(
                 "property": property,
                 "fractions_owned": investment.fractions_owned or 0,
                 "fractions_sold": investment.fractions_sold or 0,
+                "sold_value_total": investment.sold_value_total or 0,
+                "sold_profit_total": investment.sold_profit_total or 0,
+                "sold_price_per_fraction": investment.sold_price_per_fraction,
+                "last_sold_at": investment.updated_at,
                 "initial_value": investment.initial_value,
                 "current_value": investment.current_value,
                 "created_at": investment.created_at,
@@ -45,6 +49,11 @@ def get_my_investments(
             agg["investment_ids"].append(investment.id)
             agg["fractions_owned"] += investment.fractions_owned or 0
             agg["fractions_sold"] += investment.fractions_sold or 0
+            agg["sold_value_total"] += investment.sold_value_total or 0
+            agg["sold_profit_total"] += investment.sold_profit_total or 0
+            if investment.sold_price_per_fraction is not None and investment.updated_at >= agg["last_sold_at"]:
+                agg["sold_price_per_fraction"] = investment.sold_price_per_fraction
+                agg["last_sold_at"] = investment.updated_at
             agg["initial_value"] += investment.initial_value
             agg["current_value"] += investment.current_value
             if investment.created_at < agg["created_at"]:
@@ -71,6 +80,9 @@ def get_my_investments(
             property_id=property_id,
             fractions_owned=agg["fractions_owned"],
             fractions_sold=agg["fractions_sold"],
+            sold_price_per_fraction=agg.get("sold_price_per_fraction"),
+            sold_value_total=agg.get("sold_value_total"),
+            sold_profit_total=agg.get("sold_profit_total"),
             ownership_percentage=ownership_percentage,
             initial_value=total_initial,
             current_value=total_current,
@@ -128,6 +140,9 @@ def get_investment_detail(
         property_id=investment.property_id,
         fractions_owned=investment.fractions_owned,
         fractions_sold=investment.fractions_sold,
+        sold_price_per_fraction=investment.sold_price_per_fraction,
+        sold_value_total=investment.sold_value_total,
+        sold_profit_total=investment.sold_profit_total,
         initial_value=investment.initial_value,
         current_value=investment.current_value,
         growth_percentage=investment.growth_percentage,

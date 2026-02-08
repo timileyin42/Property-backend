@@ -107,6 +107,9 @@ def list_investments(
                 property_id=inv.property_id,
                 fractions_owned=inv.fractions_owned,
                 fractions_sold=inv.fractions_sold,
+                sold_price_per_fraction=inv.sold_price_per_fraction,
+                sold_value_total=inv.sold_value_total,
+                sold_profit_total=inv.sold_profit_total,
                 ownership_percentage=inv.ownership_percentage,
                 initial_value=inv.initial_value,
                 current_value=inv.current_value,
@@ -562,6 +565,11 @@ def remove_investment_fractions(
 
     investment.fractions_owned -= removal.fractions_to_remove
     investment.fractions_sold = (investment.fractions_sold or 0) + removal.fractions_to_remove
+    investment.sold_price_per_fraction = per_fraction_current
+    sold_value = per_fraction_current * removal.fractions_to_remove
+    sold_profit = (per_fraction_current - per_fraction_initial) * removal.fractions_to_remove
+    investment.sold_value_total = (investment.sold_value_total or 0) + sold_value
+    investment.sold_profit_total = (investment.sold_profit_total or 0) + sold_profit
     investment.initial_value = max(
         0.0,
         investment.initial_value - (per_fraction_initial * removal.fractions_to_remove)
