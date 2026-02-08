@@ -106,7 +106,7 @@ def list_investments(
                 user_id=inv.user_id,
                 property_id=inv.property_id,
                 fractions_owned=inv.fractions_owned,
-                fractions_sold=prop.fractions_sold if prop else None,
+                fractions_sold=inv.fractions_sold,
                 ownership_percentage=inv.ownership_percentage,
                 initial_value=inv.initial_value,
                 current_value=inv.current_value,
@@ -512,8 +512,6 @@ def assign_investment(
     db.commit()
     db.refresh(new_investment)
     
-    new_investment.fractions_sold = property.fractions_sold
-
     return new_investment
 
 
@@ -563,6 +561,7 @@ def remove_investment_fractions(
     per_fraction_current = investment.current_value / investment.fractions_owned
 
     investment.fractions_owned -= removal.fractions_to_remove
+    investment.fractions_sold = (investment.fractions_sold or 0) + removal.fractions_to_remove
     investment.initial_value = max(
         0.0,
         investment.initial_value - (per_fraction_initial * removal.fractions_to_remove)
@@ -579,8 +578,6 @@ def remove_investment_fractions(
 
     db.commit()
     db.refresh(investment)
-
-    investment.fractions_sold = property.fractions_sold
 
     return investment
 
@@ -613,10 +610,6 @@ def update_investment_valuation(
     db.commit()
     db.refresh(investment)
 
-    property = db.query(Property).filter(Property.id == investment.property_id).first()
-    if property:
-        investment.fractions_sold = property.fractions_sold
-    
     # Create/update snapshot to track this valuation change
     # force_update=True ensures today's snapshot reflects the latest values
     try:

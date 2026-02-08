@@ -34,6 +34,7 @@ def get_my_investments(
                 "user_id": investment.user_id,
                 "property": property,
                 "fractions_owned": investment.fractions_owned or 0,
+                "fractions_sold": investment.fractions_sold or 0,
                 "initial_value": investment.initial_value,
                 "current_value": investment.current_value,
                 "created_at": investment.created_at,
@@ -43,6 +44,7 @@ def get_my_investments(
             agg = aggregated[investment.property_id]
             agg["investment_ids"].append(investment.id)
             agg["fractions_owned"] += investment.fractions_owned or 0
+            agg["fractions_sold"] += investment.fractions_sold or 0
             agg["initial_value"] += investment.initial_value
             agg["current_value"] += investment.current_value
             if investment.created_at < agg["created_at"]:
@@ -68,7 +70,7 @@ def get_my_investments(
             user_id=agg["user_id"],
             property_id=property_id,
             fractions_owned=agg["fractions_owned"],
-            fractions_sold=property.fractions_sold if property else None,
+            fractions_sold=agg["fractions_sold"],
             ownership_percentage=ownership_percentage,
             initial_value=total_initial,
             current_value=total_current,
@@ -124,6 +126,8 @@ def get_investment_detail(
         id=investment.id,
         user_id=investment.user_id,
         property_id=investment.property_id,
+        fractions_owned=investment.fractions_owned,
+        fractions_sold=investment.fractions_sold,
         initial_value=investment.initial_value,
         current_value=investment.current_value,
         growth_percentage=investment.growth_percentage,

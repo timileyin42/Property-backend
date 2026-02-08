@@ -52,6 +52,8 @@ class InvestmentDetailResponse(BaseModel):
     id: int
     user_id: int
     property_id: int
+    fractions_owned: Optional[int] = None
+    fractions_sold: Optional[int] = None
     initial_value: float
     current_value: float
     growth_percentage: float
