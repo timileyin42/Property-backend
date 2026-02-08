@@ -68,6 +68,7 @@ def get_my_investments(
             user_id=agg["user_id"],
             property_id=property_id,
             fractions_owned=agg["fractions_owned"],
+            fractions_sold=property.fractions_sold if property else None,
             ownership_percentage=ownership_percentage,
             initial_value=total_initial,
             current_value=total_current,
