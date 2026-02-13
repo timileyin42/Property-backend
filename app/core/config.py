@@ -36,10 +36,12 @@ class Settings(BaseSettings):
     ADMIN_NAME: str
     ADMIN_PHONE: str
     
-    # Google Cloud Storage (signed URLs)
-    GCP_BUCKET_NAME: str
-    GCP_SERVICE_ACCOUNT_KEY_BASE64: str
-    GCP_SIGNED_URL_EXPIRES_SECONDS: int = 3600
+    # Cloudflare R2 (signed URLs)
+    R2_ENDPOINT_URL: str
+    R2_ACCESS_KEY_ID: str
+    R2_SECRET_ACCESS_KEY: str
+    R2_BUCKET_NAME: str
+    R2_SIGNED_URL_EXPIRES_SECONDS: int = 3600
     
     # Email Configuration (Resend)
     RESEND_API_KEY: str

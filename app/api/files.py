@@ -25,7 +25,7 @@ def presign_upload(
     return generate_presigned_put_url(
         request.filename,
         request.content_type,
-        expires_in=settings.GCP_SIGNED_URL_EXPIRES_SECONDS
+        expires_in=settings.R2_SIGNED_URL_EXPIRES_SECONDS
     )
 
 
@@ -34,5 +34,5 @@ def presign_download(request: PresignDownloadRequest):
     """Generate a presigned download URL (public)."""
     return generate_presigned_get_url(
         request.file_key,
-        expires_in=settings.GCP_SIGNED_URL_EXPIRES_SECONDS
+        expires_in=settings.R2_SIGNED_URL_EXPIRES_SECONDS
     )
