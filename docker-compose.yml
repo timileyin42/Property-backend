@@ -39,11 +39,10 @@ services:
       - property_network
 
 volumes:
-  db_data:
-    driver: local
   redis_data:
     driver: local
 
 networks:
   property_network:
-    driver: bridge
+    external: true
+    name: property_property_network
