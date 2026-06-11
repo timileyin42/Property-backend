@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+from sqlalchemy import text
 from app.core.config import settings
 from app.core.startup import startup_tasks
 from app.api import auth, public, admin, investor, user, files, media_proxy
@@ -128,7 +129,7 @@ def health_check():
     db_status = {"status": "healthy", "connected": True}
     try:
         db = next(get_db())
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db.close()
     except Exception as e:
         db_status = {"status": "unhealthy", "connected": False, "error": str(e)}
