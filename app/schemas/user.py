@@ -56,6 +56,13 @@ class UserListResponse(BaseModel):
     total: int
     page: int
     page_size: int
+    total_pages: int = None
+    
+    def __init__(self, **data):
+        """Calculate total_pages from total and page_size"""
+        if 'total_pages' not in data or data['total_pages'] is None:
+            data['total_pages'] = (data['total'] + data['page_size'] - 1) // data['page_size']
+        super().__init__(**data)
 
 
 class ProfileUpdate(BaseModel):

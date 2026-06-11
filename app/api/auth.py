@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Body, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
@@ -8,12 +8,13 @@ from app.core.permissions import get_current_user
 from app.models.user import User, UserRole
 from app.schemas.auth import SignupRequest, LoginRequest, TokenResponse, UserResponse, ForgotPasswordRequest, ResetPasswordRequest
 from app.utils.hashing import hash_password, verify_password
+from app.utils.rate_limit import rate_limit_signup, rate_limit_ip
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 
 @router.post("/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-def signup(request: SignupRequest, db: Session = Depends(get_db)):
+def signup(request: SignupRequest, http_request: Request, db: Session = Depends(get_db)):
     """
     User signup endpoint - creates new user account with email verification
     
@@ -22,6 +23,12 @@ def signup(request: SignupRequest, db: Session = Depends(get_db)):
     Returns access token for immediate login.
     """
     from app.services.email_service import send_verification_otp, generate_otp
+    
+    # Rate limiting
+    rate_limit_signup(request.email)
+    
+    client_ip = http_request.client.host if http_request.client else "unknown"
+    rate_limit_ip(client_ip)
     
     # Check if email already exists
     existing_user = db.query(User).filter(User.email == request.email).first()

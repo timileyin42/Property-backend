@@ -55,3 +55,6 @@ PORTFOLIO_TREND_IMPLEMENTATION.md
 logo-email.png
 planetdev-475809-ec6141db3454.json
 backfill_investment_fractions_sold.py
+DEPLOYMENT_GUIDE.md
+SECURITY_FIX_SPAM.md
+run_cleanup.sh
