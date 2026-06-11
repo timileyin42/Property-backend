@@ -23,7 +23,7 @@ services:
     container_name: property_api
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8001:8000"
     env_file:
       - .env
     depends_on:
@@ -44,5 +44,4 @@ volumes:
 
 networks:
   property_network:
-    external: true
-    name: property_property_network
+    driver: bridge
